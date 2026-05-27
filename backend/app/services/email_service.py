@@ -14,6 +14,17 @@ def _purpose_label(purpose: str) -> str:
     return "sign-in"
 
 
+def _is_smtp_enabled() -> bool:
+    host = (settings.SMTP_HOST or "").strip()
+    user = (settings.SMTP_USER or "").strip()
+    # Check for empty or standard placeholder values
+    if not host or host in ("--", "change_me", "placeholder", "None", "null"):
+        return False
+    if not user or user in ("--", "change_me", "placeholder", "None", "null"):
+        return False
+    return True
+
+
 def send_otp_email(to_email: str, code: str, purpose: str) -> None:
     subject = f"OBS PING — Your {_purpose_label(purpose)} code"
     body = (
@@ -23,18 +34,27 @@ def send_otp_email(to_email: str, code: str, purpose: str) -> None:
         "— The Observer (OBS PING)"
     )
 
-    if settings.SMTP_HOST and settings.SMTP_USER:
+    if _is_smtp_enabled():
         msg = MIMEText(body)
         msg["Subject"] = subject
         msg["From"] = settings.SMTP_FROM or settings.SMTP_USER
         msg["To"] = to_email
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            if settings.SMTP_USE_TLS:
-                server.starttls()
-            if settings.SMTP_PASSWORD:
-                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.send_message(msg)
-        logger.info("OTP email sent to %s (%s)", to_email, purpose)
+        try:
+            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+                if settings.SMTP_USE_TLS:
+                    server.starttls()
+                if settings.SMTP_PASSWORD:
+                    server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                server.send_message(msg)
+            logger.info("OTP email sent to %s (%s)", to_email, purpose)
+        except Exception as e:
+            logger.error("Failed to send OTP email to %s via SMTP (falling back to log): %s", to_email, str(e))
+            logger.warning(
+                "SMTP connection failed — OTP for %s (%s): %s",
+                to_email,
+                purpose,
+                code,
+            )
     else:
         logger.warning(
             "SMTP not configured — OTP for %s (%s): %s",
@@ -50,7 +70,7 @@ def send_notification_email(to_email: str, subject: str, message: str) -> None:
         "— The Observer (OBS PING)"
     )
 
-    if settings.SMTP_HOST and settings.SMTP_USER:
+    if _is_smtp_enabled():
         msg = MIMEText(body)
         msg["Subject"] = subject
         msg["From"] = settings.SMTP_FROM or settings.SMTP_USER
@@ -72,4 +92,5 @@ def send_notification_email(to_email: str, subject: str, message: str) -> None:
             subject,
             message,
         )
+
 
