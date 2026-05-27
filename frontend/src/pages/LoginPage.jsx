@@ -165,8 +165,14 @@ export default function LoginPage() {
 
   const title =
     mode === "forgot"
-      ? step === "credentials" ? "Forgot password" : "Reset password"
-      : step === "credentials" ? "Sign in" : "Enter verification code";
+      ? step === "credentials"
+        ? "Forgot password"
+        : step === "otp"
+        ? "Enter verification code"
+        : "Reset password"
+      : step === "credentials"
+      ? "Sign in"
+      : "Enter verification code";
 
   return (
     <div className="min-h-screen bg-maroon-700 flex items-center justify-center p-4">
@@ -220,7 +226,7 @@ export default function LoginPage() {
 
         {mode === "forgot" && step === "credentials" && (
           <form onSubmit={handleForgotRequest} className="space-y-4">
-            <p className="text-xs text-gray-500">We will email a verification code if this account exists.</p>
+            <p className="text-xs text-gray-500"> we will email a verification code if this account exists.</p>
             <div className="">
               <label className="label">Email</label>
               <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
@@ -237,7 +243,11 @@ export default function LoginPage() {
         )}
 
         {mode === "forgot" && step === "otp" && (
-          <form onSubmit={handleResetPassword} className="space-y-4">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (otp.length !== OTP_LEN) return toast.error("Enter the 6-digit code.");
+            setStep("reset_password");
+          }} className="space-y-4">
             <p className="text-xs text-gray-500 text-center">Code sent to <strong>{email}</strong></p>
             {devOtp && (
               <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 text-center">
@@ -245,6 +255,19 @@ export default function LoginPage() {
               </p>
             )}
             <OtpInput value={otp} onChange={setOtp} disabled={loading} />
+            <button type="submit" className="btn-primary w-full" disabled={loading || otp.length !== OTP_LEN}>
+              Verify code
+            </button>
+            <button type="button" className="text-sm text-gray-500 hover:underline w-full text-center"
+              onClick={resetFlow} disabled={loading}>
+              Back
+            </button>
+          </form>
+        )}
+
+        {mode === "forgot" && step === "reset_password" && (
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <p className="text-xs text-gray-500 text-center">Code verified. Enter your new password below.</p>
             <div className="">
               <label className="label">New password</label>
               <input className="input" type="password" value={newPassword}
@@ -255,12 +278,12 @@ export default function LoginPage() {
               <input className="input" type="password" value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)} minLength={8} required autoComplete="new-password" />
             </div>
-            <button type="submit" className="btn-primary w-full" disabled={loading || otp.length !== OTP_LEN}>
+            <button type="submit" className="btn-primary w-full" disabled={loading}>
               {loading ? "Updating…" : "Reset password"}
             </button>
             <button type="button" className="text-sm text-gray-500 hover:underline w-full text-center"
-              onClick={resetFlow} disabled={loading}>
-              Back
+              onClick={() => setStep("otp")} disabled={loading}>
+              Back to code
             </button>
           </form>
         )}
@@ -268,3 +291,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
