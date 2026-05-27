@@ -8,6 +8,7 @@ import {
   requestLoginOtp,
   verifyLoginOtp,
   requestForgotPasswordOtp,
+  verifyForgotPasswordOtp,
   resetPasswordWithOtp,
   getMe,
   apiError,
@@ -68,6 +69,7 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [challengeToken, setChallengeToken] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const [devOtp, setDevOtp] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -75,6 +77,7 @@ export default function LoginPage() {
     setStep("credentials");
     setOtp("");
     setChallengeToken("");
+    setResetToken("");
     setDevOtp(null);
     setNewPassword("");
     setConfirmPassword("");
@@ -146,14 +149,29 @@ export default function LoginPage() {
     }
   };
 
-  const handleResetPassword = async (e) => {
+  const handleVerifyForgotOtp = async (e) => {
     e.preventDefault();
     if (otp.length !== OTP_LEN) return toast.error("Enter the 6-digit code.");
+    setLoading(true);
+    try {
+      const data = await verifyForgotPasswordOtp(challengeToken, otp);
+      setResetToken(data.reset_token);
+      toast.success(data.message);
+      setStep("reset_password");
+    } catch (err) {
+      toast.error(apiError(err, "Verification failed. Check the code."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
     if (newPassword.length < 8) return toast.error("Password must be at least 8 characters.");
     if (newPassword !== confirmPassword) return toast.error("Passwords do not match.");
     setLoading(true);
     try {
-      const data = await resetPasswordWithOtp(challengeToken, otp, newPassword);
+      const data = await resetPasswordWithOtp(resetToken, newPassword);
       toast.success(data.message);
       switchMode("login");
     } catch (err) {
@@ -243,11 +261,7 @@ export default function LoginPage() {
         )}
 
         {mode === "forgot" && step === "otp" && (
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (otp.length !== OTP_LEN) return toast.error("Enter the 6-digit code.");
-            setStep("reset_password");
-          }} className="space-y-4">
+          <form onSubmit={handleVerifyForgotOtp} className="space-y-4">
             <p className="text-xs text-gray-500 text-center">Code sent to <strong>{email}</strong></p>
             {devOtp && (
               <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 text-center">
@@ -256,7 +270,7 @@ export default function LoginPage() {
             )}
             <OtpInput value={otp} onChange={setOtp} disabled={loading} />
             <button type="submit" className="btn-primary w-full" disabled={loading || otp.length !== OTP_LEN}>
-              Verify code
+              {loading ? "Verifying…" : "Verify code"}
             </button>
             <button type="button" className="text-sm text-gray-500 hover:underline w-full text-center"
               onClick={resetFlow} disabled={loading}>

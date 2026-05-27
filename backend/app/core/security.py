@@ -56,3 +56,23 @@ def decode_otp_challenge(token: str, expected_purpose: str) -> Optional[int]:
         return int(user_id) if user_id else None
     except JWTError:
         return None
+
+
+def create_reset_token(user_id: int) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.OTP_CHALLENGE_EXPIRE_MINUTES
+    )
+    payload = {"sub": str(user_id), "typ": "reset", "exp": expire}
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def decode_reset_token(token: str) -> Optional[int]:
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("typ") != "reset":
+            return None
+        user_id = payload.get("sub")
+        return int(user_id) if user_id else None
+    except JWTError:
+        return None
+

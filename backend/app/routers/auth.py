@@ -11,6 +11,8 @@ from app.core.security import (
     hash_password,
     create_otp_challenge,
     decode_otp_challenge,
+    create_reset_token,
+    decode_reset_token,
 )
 from app.db.session import get_db
 from app.models.user import User, UserStatus
@@ -21,6 +23,8 @@ from app.schemas.auth import (
     LoginInitRequest,
     LoginVerifyRequest,
     ForgotPasswordRequest,
+    ForgotPasswordVerifyRequest,
+    ForgotPasswordVerifyResponse,
     ResetPasswordRequest,
 )
 from app.services import otp_service
@@ -96,9 +100,27 @@ def forgot_password_request(payload: ForgotPasswordRequest, db: Session = Depend
     )
 
 
+@router.post("/forgot-password/verify", response_model=ForgotPasswordVerifyResponse)
+def forgot_password_verify(payload: ForgotPasswordVerifyRequest, db: Session = Depends(get_db)):
+    user_id = decode_otp_challenge(payload.challenge_token, OtpPurpose.password_reset.value)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Invalid or expired session. Start over.")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or user.status == UserStatus.deactivated:
+        raise HTTPException(status_code=403, detail="Account is not available.")
+
+    otp_service.verify_otp(db, user_id, OtpPurpose.password_reset, payload.otp)
+    reset_token = create_reset_token(user_id)
+    return ForgotPasswordVerifyResponse(
+        reset_token=reset_token,
+        message="Code verified successfully. You may now choose a new password."
+    )
+
+
 @router.post("/forgot-password/reset")
 def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
-    user_id = decode_otp_challenge(payload.challenge_token, OtpPurpose.password_reset.value)
+    user_id = decode_reset_token(payload.reset_token)
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid or expired session. Start over.")
 
@@ -109,7 +131,6 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     if verify_password(payload.new_password, user.hashed_password):
         raise HTTPException(status_code=400, detail="New password must be different from the current one.")
 
-    otp_service.verify_otp(db, user_id, OtpPurpose.password_reset, payload.otp)
     user.hashed_password = hash_password(payload.new_password)
     db.commit()
     return {"message": "Password updated. You can sign in with your new password."}

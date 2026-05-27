@@ -32,10 +32,17 @@ export async function requestForgotPasswordOtp(email) {
   return data;
 }
 
-export async function resetPasswordWithOtp(challengeToken, otp, newPassword) {
-  const { data } = await api.post("/auth/forgot-password/reset", {
+export async function verifyForgotPasswordOtp(challengeToken, otp) {
+  const { data } = await api.post("/auth/forgot-password/verify", {
     challenge_token: challengeToken,
     otp,
+  });
+  return data;
+}
+
+export async function resetPasswordWithOtp(resetToken, newPassword) {
+  const { data } = await api.post("/auth/forgot-password/reset", {
+    reset_token: resetToken,
     new_password: newPassword,
   });
   return data;
