@@ -36,7 +36,8 @@ def _send_via_resend(to_email: str, subject: str, body: str) -> bool:
         url = "https://api.resend.com/emails"
         headers = {
             "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "User-Agent": "obs-ping-backend/1.0"
         }
         
         # Free Resend accounts can ONLY send from onboarding@resend.dev.
