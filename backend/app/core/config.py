@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     SMTP_FROM: str = ""
     SMTP_USE_TLS: bool = True
 
+    # Resend Email API (optional - used over HTTPS to bypass outbound port blocks)
+    RESEND_API_KEY: str = ""
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 
