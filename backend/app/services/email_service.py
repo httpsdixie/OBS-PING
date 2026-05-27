@@ -194,7 +194,7 @@ OTP_HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="container">
       <div class="header">
         <h1 class="logo">OBS PING</h1>
-        <p class="subtitle">The Observer — Task Management</p>
+        <p class="subtitle">The Observer</p>
       </div>
       <div class="content">
         <h2 class="greeting">Hello,</h2>
@@ -206,11 +206,11 @@ OTP_HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
         
         <center>
-          <div class="expiry">⏳ This code expires in <strong>{expires} minutes</strong></div>
+          <div class="expiry"> This code expires in <strong>{expires} minutes</strong></div>
         </center>
         
         <p class="security-note">
-          ⚠️ <strong>Security Notice:</strong> If you did not request this verification code, please ignore this email or change your password immediately to keep your account secure.
+           <strong>Security Notice:</strong> If you did not request this verification code, please ignore this email or change your password immediately to keep your account secure.
         </p>
       </div>
       <div class="footer">
@@ -327,7 +327,7 @@ NOTIFICATION_HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="container">
       <div class="header">
         <h1 class="logo">OBS PING</h1>
-        <p class="subtitle">The Observer — Task Management</p>
+        <p class="subtitle">The Observer</p>
       </div>
       <div class="content">
         <h2 class="greeting">Hello,</h2>

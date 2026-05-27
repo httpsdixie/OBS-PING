@@ -197,7 +197,7 @@ export default function LoginPage() {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-maroon-700">OBS PING</h1>
-          <p className="text-sm text-gray-500 mt-1">The Observer — Task Management System</p>
+          <p className="text-sm text-gray-500 mt-1">The Observer</p>
           <p className="text-sm font-medium text-gray-800 mt-3">{title}</p>
         </div>
 
