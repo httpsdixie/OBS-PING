@@ -39,10 +39,9 @@ def _send_via_resend(to_email: str, subject: str, body: str) -> bool:
             "Content-Type": "application/json"
         }
         
-        # Determine fallback sender if not defined
-        from_email = settings.SMTP_FROM or "onboarding@resend.dev"
-        if "onboarding@resend.dev" in from_email or not settings.SMTP_FROM:
-            from_email = "OBS PING <onboarding@resend.dev>"
+        # Free Resend accounts can ONLY send from onboarding@resend.dev.
+        # We force onboarding@resend.dev to guarantee successful delivery out-of-the-box.
+        from_email = "OBS PING <onboarding@resend.dev>"
 
         data = {
             "from": from_email,
