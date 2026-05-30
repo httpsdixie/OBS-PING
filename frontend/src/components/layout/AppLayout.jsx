@@ -8,9 +8,15 @@ import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import UnreadNotificationsToast from "../notifications/UnreadNotificationsToast";
 import WelcomeTour from "../onboarding/WelcomeTour";
+import AuditModal from "../audit/AuditModal";
+import PermissionsModal from "../permissions/PermissionsModal";
+import AccountModal from "../account/AccountModal";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showAudit, setShowAudit]               = useState(false);
+  const [showPermissions, setShowPermissions]   = useState(false);
+  const [showAccount, setShowAccount]           = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -18,7 +24,11 @@ export default function AppLayout() {
       <UnreadNotificationsToast />
       {/* Desktop sidebar */}
       <div className="hidden md:flex md:flex-shrink-0">
-        <Sidebar />
+        <Sidebar
+          onOpenAudit={() => setShowAudit(true)}
+          onOpenPermissions={() => setShowPermissions(true)}
+          onOpenAccount={() => setShowAccount(true)}
+        />
       </div>
 
       {/* Mobile drawer overlay */}
@@ -29,7 +39,12 @@ export default function AppLayout() {
             onClick={() => setSidebarOpen(false)}
           />
           <div className="relative z-50">
-            <Sidebar onClose={() => setSidebarOpen(false)} />
+            <Sidebar
+              onClose={() => setSidebarOpen(false)}
+              onOpenAudit={() => setShowAudit(true)}
+              onOpenPermissions={() => setShowPermissions(true)}
+              onOpenAccount={() => setShowAccount(true)}
+            />
           </div>
         </div>
       )}
@@ -41,6 +56,10 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+
+      {showAudit       && <AuditModal onClose={() => setShowAudit(false)} />}
+      {showPermissions && <PermissionsModal onClose={() => setShowPermissions(false)} />}
+      {showAccount     && <AccountModal onClose={() => setShowAccount(false)} />}
     </div>
   );
 }

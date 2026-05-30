@@ -9,10 +9,7 @@ import { useSimpleMode } from "../../context/SimpleModeContext";
 import { navLabel } from "../../constants/labels";
 import { logout } from "../../services/authService";
 import toast from "react-hot-toast";
-import AuditModal from "../audit/AuditModal";
-import PermissionsModal from "../permissions/PermissionsModal";
 import ConfirmDialog from "../ui/ConfirmDialog";
-import AccountModal from "../account/AccountModal";
 import {
   ClipboardDocumentListIcon,
   ClipboardIcon,
@@ -32,13 +29,10 @@ const NAV_LINKS = [
   { to: "/admin",     key: "admin",     icon: ShieldCheckIcon,             roles: ["super_admin"] },
 ];
 
-export default function Sidebar({ onClose }) {
+export default function Sidebar({ onClose, onOpenAudit, onOpenPermissions, onOpenAccount }) {
   const { user, canViewDir, canViewAudit, isSuperAdmin } = useAuth();
   const { simpleMode } = useSimpleMode();
-  const [showAudit, setShowAudit]               = useState(false);
-  const [showPermissions, setShowPermissions]   = useState(false);
   const [confirmLogout, setConfirmLogout]       = useState(false);
-  const [showAccount, setShowAccount]           = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -64,7 +58,7 @@ export default function Sidebar({ onClose }) {
         {/* User chip */}
         <button
           type="button"
-          onClick={() => setShowAccount(true)}
+          onClick={() => { onOpenAccount?.(); onClose?.(); }}
           className="px-6 py-4 border-b border-maroon-800 text-left w-full hover:bg-maroon-800 transition-colors"
         >
           <p className="text-sm font-semibold truncate">{user?.name}</p>
@@ -96,7 +90,7 @@ export default function Sidebar({ onClose }) {
           {/* Audit Log — opens modal */}
           {canViewAudit && (
             <button
-              onClick={() => { setShowAudit(true); onClose?.(); }}
+              onClick={() => { onOpenAudit?.(); onClose?.(); }}
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-maroon-100 hover:bg-maroon-800 transition-colors min-h-[44px]"
             >
               <DocumentMagnifyingGlassIcon className="w-5 h-5 flex-shrink-0" />
@@ -106,7 +100,7 @@ export default function Sidebar({ onClose }) {
 
           {isSuperAdmin && (
             <button
-              onClick={() => { setShowPermissions(true); onClose?.(); }}
+              onClick={() => { onOpenPermissions?.(); onClose?.(); }}
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-maroon-100 hover:bg-maroon-800 transition-colors min-h-[44px]"
             >
               <KeyIcon className="w-5 h-5 flex-shrink-0" />
@@ -127,9 +121,7 @@ export default function Sidebar({ onClose }) {
         </div>
       </aside>
 
-      {showAudit       && <AuditModal onClose={() => setShowAudit(false)} />}
-      {showPermissions && <PermissionsModal onClose={() => setShowPermissions(false)} />}
-      {showAccount     && <AccountModal onClose={() => setShowAccount(false)} />}
+
 
       {confirmLogout && (
         <ConfirmDialog
