@@ -105,7 +105,8 @@ def create_task(db: Session, payload: TaskCreate, creator: User) -> Task:
     now = datetime.now(timezone.utc)
     deadline = payload.deadline
     if deadline.tzinfo is None:
-        deadline = deadline.replace(tzinfo=timezone.utc)
+        from datetime import timedelta
+        deadline = deadline.replace(tzinfo=timezone(timedelta(hours=8)))
     if deadline < now + timedelta(days=2):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -175,7 +176,8 @@ def update_task(db: Session, task_id: int, payload: TaskUpdate) -> Task:
         now = datetime.now(timezone.utc)
         deadline = payload.deadline
         if deadline.tzinfo is None:
-            deadline = deadline.replace(tzinfo=timezone.utc)
+            from datetime import timedelta
+            deadline = deadline.replace(tzinfo=timezone(timedelta(hours=8)))
         if deadline < now + timedelta(days=2):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

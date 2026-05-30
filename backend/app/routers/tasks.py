@@ -177,7 +177,9 @@ def archive_task(
     now = datetime.now(timezone.utc)
     deadline = task.deadline
     if deadline.tzinfo is None:
-        deadline = deadline.replace(tzinfo=timezone.utc)
+        # Treat database naive datetime as Philippine Time (UTC+8)
+        from datetime import timedelta
+        deadline = deadline.replace(tzinfo=timezone(timedelta(hours=8)))
 
     is_published = task.status == TaskStatus.published
     is_overdue   = deadline < now
