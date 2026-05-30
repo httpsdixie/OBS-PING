@@ -372,11 +372,7 @@ def send_otp_email(to_email: str, code: str, purpose: str) -> None:
         expires=settings.OTP_EXPIRE_MINUTES
     )
 
-    # Try Resend HTTPS first (unaffected by port blocks)
-    if _send_via_resend(to_email, subject, body, html_content):
-        return
-
-    # Fallback to SMTP
+    # 1. Try SMTP first if enabled (actual real SMTP delivery)
     if _is_smtp_enabled():
         msg = MIMEText(html_content, "html")
         msg["Subject"] = subject
@@ -390,21 +386,21 @@ def send_otp_email(to_email: str, code: str, purpose: str) -> None:
                     server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                 server.send_message(msg)
             logger.info("OTP email sent to %s (%s) via SMTP", to_email, purpose)
+            return  # Success!
         except Exception as e:
-            logger.error("Failed to send OTP email to %s via SMTP (falling back to log): %s", to_email, str(e))
-            logger.warning(
-                "SMTP connection failed — OTP for %s (%s): %s",
-                to_email,
-                purpose,
-                code,
-            )
-    else:
-        logger.warning(
-            "SMTP/Resend not configured — OTP for %s (%s): %s",
-            to_email,
-            purpose,
-            code,
-        )
+            logger.error("Failed to send OTP email to %s via SMTP (trying Resend fallback): %s", to_email, str(e))
+
+    # 2. Try Resend HTTPS fallback (unaffected by port blocks)
+    if _send_via_resend(to_email, subject, body, html_content):
+        return
+
+    # If both failed or are not configured, log a warning
+    logger.warning(
+        "SMTP/Resend failed or not configured — OTP for %s (%s): %s",
+        to_email,
+        purpose,
+        code,
+    )
 
 
 def send_notification_email(to_email: str, subject: str, message: str) -> None:
@@ -419,11 +415,7 @@ def send_notification_email(to_email: str, subject: str, message: str) -> None:
         message=message
     )
 
-    # Try Resend HTTPS first (unaffected by port blocks)
-    if _send_via_resend(to_email, subject, body, html_content):
-        return
-
-    # Fallback to SMTP
+    # 1. Try SMTP first if enabled (actual real SMTP delivery)
     if _is_smtp_enabled():
         msg = MIMEText(html_content, "html")
         msg["Subject"] = subject
@@ -437,15 +429,20 @@ def send_notification_email(to_email: str, subject: str, message: str) -> None:
                     server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                 server.send_message(msg)
             logger.info("Notification email sent to %s via SMTP", to_email)
+            return  # Success!
         except Exception as e:
-            logger.error("Failed to send notification email to %s via SMTP: %s", to_email, str(e))
-    else:
-        logger.warning(
-            "SMTP/Resend not configured — Email to %s: [%s] %s",
-            to_email,
-            subject,
-            message,
-        )
+            logger.error("Failed to send notification email to %s via SMTP (trying Resend fallback): %s", to_email, str(e))
+
+    # 2. Try Resend HTTPS fallback (unaffected by port blocks)
+    if _send_via_resend(to_email, subject, body, html_content):
+        return
+
+    logger.warning(
+        "SMTP/Resend failed or not configured — Email to %s: [%s] %s",
+        to_email,
+        subject,
+        message,
+    )
 
 
 
