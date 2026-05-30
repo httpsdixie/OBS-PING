@@ -105,7 +105,7 @@ function StageTimeline({ task, currentUser, onUpdated, viewingArchived }) {
 
           // Who can act on this stage?
           const isMyStage   = stage.assignee_id === currentUser?.id;
-          const staffCanAct = role === "staff" && isMyStage && isActive &&
+          const staffCanAct = isMyStage && isActive &&
             ["assigned", "acknowledged", "needs_revision"].includes(stage.status);
           const adminCanAct = (role === "admin" || role === "super_admin") &&
             stage.status === "submitted";
@@ -116,7 +116,8 @@ function StageTimeline({ task, currentUser, onUpdated, viewingArchived }) {
           );
           const canPokeStage = canPoke && isActive && !viewingArchived;
 
-          const advanceLabel = advanceActionLabel(`${stage.status}-${role}`, simpleMode);
+          const actionRole = isMyStage ? "staff" : role;
+          const advanceLabel = advanceActionLabel(`${stage.status}-${actionRole}`, simpleMode);
 
           return (
             <li key={stage.id} className="ml-4 pb-1">

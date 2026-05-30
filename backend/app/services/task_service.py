@@ -163,6 +163,13 @@ def create_task(db: Session, payload: TaskCreate, creator: User) -> Task:
 def update_task(db: Session, task_id: int, payload: TaskUpdate) -> Task:
     task = get_task_or_404(db, task_id)
 
+    # Enforce task edit lock after acknowledgment/submission (FR-11 / Data Integrity Rules)
+    if task.status != TaskStatus.assigned:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tasks cannot be edited once they have been acknowledged or submitted by the assignee.",
+        )
+
     # Enforce 2-day buffer validation on update if deadline is being changed (FR-04)
     if payload.deadline is not None:
         now = datetime.now(timezone.utc)
@@ -175,8 +182,45 @@ def update_task(db: Session, task_id: int, payload: TaskUpdate) -> Task:
                 detail="Deadline must be at least 48 hours (2 days) from the current date and time.",
             )
 
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    for field, value in payload.model_dump(exclude_unset=True, exclude={"stages"}).items():
         setattr(task, field, value)
+
+    # Update stages if provided
+    if payload.stages is not None:
+        # Validate all new assignees exist and are active
+        for sc in payload.stages:
+            assignee = db.query(User).filter(User.id == sc.assignee_id).first()
+            if not assignee or assignee.status == UserStatus.deactivated:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Assignee id={sc.assignee_id} not found or deactivated.",
+                )
+
+        # Delete existing stages
+        db.query(TaskStage).filter(TaskStage.task_id == task.id).delete()
+
+        # Re-create stages
+        for idx, sc in enumerate(payload.stages, start=1):
+            stage_status = StageStatus.assigned if idx == 1 else StageStatus.pending
+            stage = TaskStage(
+                task_id=task.id,
+                order=idx,
+                label=sc.label,
+                assignee_id=sc.assignee_id,
+                status=stage_status,
+            )
+            db.add(stage)
+
+        db.flush()
+
+        # Notify first stage assignee
+        first = payload.stages[0]
+        notify(
+            db, first.assignee_id, NotificationType.task_assigned,
+            f"You have been assigned: {task.title}",
+            task_id=task.id,
+        )
+
     db.commit()
     db.refresh(task)
     return task
@@ -200,7 +244,8 @@ def advance_stage(db: Session, task_id: int, stage_id: int, actor: User) -> Task
     role = actor.role
 
     # --- Staff transitions ---
-    if role == UserRole.staff:
+    # If the user is the assignee of the stage, they must perform staff transitions
+    if stage.assignee_id == actor.id and stage.status in (StageStatus.assigned, StageStatus.acknowledged, StageStatus.needs_revision):
         _assert_stage_access(actor, stage)
         transitions = {
             StageStatus.assigned:       StageStatus.acknowledged,
@@ -211,7 +256,7 @@ def advance_stage(db: Session, task_id: int, stage_id: int, actor: User) -> Task
         if next_status is None:
             raise HTTPException(
                 status_code=400,
-                detail=f"Cannot advance stage from '{stage.status}' as staff.",
+                detail=f"Cannot advance stage from '{stage.status}' as assignee.",
             )
         stage.status = next_status
 

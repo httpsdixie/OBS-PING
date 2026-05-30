@@ -37,9 +37,9 @@ export default function ActionQueueModal({ tasks, onTaskUpdated, onClose }) {
   const actionItems = [];
   tasks.forEach((task) => {
     (task.stages ?? []).forEach((stage) => {
+      const isMyStage = stage.assignee_id === user?.id;
       const needsMe =
-        (role === "staff" && stage.assignee_id === user?.id &&
-          ["assigned", "acknowledged", "needs_revision"].includes(stage.status)) ||
+        (isMyStage && ["assigned", "acknowledged", "needs_revision"].includes(stage.status)) ||
         (role === "admin" && stage.status === "submitted") ||
         (role === "super_admin" && stage.status === "checked");
       if (needsMe) actionItems.push({ task, stage });
@@ -110,7 +110,8 @@ export default function ActionQueueModal({ tasks, onTaskUpdated, onClose }) {
       ) : (
         <div className="space-y-3">
           {actionItems.map(({ task, stage }) => {
-            const advLabel = advanceActionLabel(`${stage.status}-${role}`, simpleMode);
+            const actionRole = stage.assignee_id === user?.id ? "staff" : role;
+            const advLabel = advanceActionLabel(`${stage.status}-${actionRole}`, simpleMode);
             const isBusy   = busy === stage.id;
 
             return (

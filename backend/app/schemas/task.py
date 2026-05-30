@@ -51,6 +51,7 @@ class TaskUpdate(BaseModel):
     deadline: Optional[datetime] = None
     status: Optional[TaskStatus] = None
     archived: Optional[bool] = None
+    stages: Optional[List[StageCreate]] = None
 
 
 class TaskOut(BaseModel):
