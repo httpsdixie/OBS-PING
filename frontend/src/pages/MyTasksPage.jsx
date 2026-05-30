@@ -13,7 +13,7 @@ import Spinner from "../components/ui/Spinner";
 import Pagination from "../components/ui/Pagination";
 import { FunnelIcon } from "@heroicons/react/24/outline";
 
-const STATUSES  = ["assigned","acknowledged","submitted","checked","needs_revision","published"];
+const STATUSES  = ["assigned","acknowledged","submitted","checked","needs_revision"];
 const PAGE_SIZE = 10;
 
 export default function MyTasksPage() {

@@ -26,7 +26,7 @@ import {
   ArchiveBoxIcon,
 } from "@heroicons/react/24/outline";
 
-const STATUSES = ["assigned","acknowledged","submitted","checked","needs_revision","published"];
+const STATUSES = ["assigned","acknowledged","submitted","checked","needs_revision"];
 const CATEGORIES = ["LITERARY","U-THOUGHTS","MEME","TIGPANIID","Holiday","National Event"];
 const PAGE_SIZE  = 10;
 
