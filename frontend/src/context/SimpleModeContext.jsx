@@ -15,23 +15,12 @@ function readSimpleMode() {
 }
 
 export function SimpleModeProvider({ children }) {
-  const [simpleMode, setSimpleModeState] = useState(readSimpleMode);
-  const [showTour, setShowTour] = useState(() => !localStorage.getItem(TOUR_KEY));
+  const simpleMode = false;
+  const showTour = false;
 
-  const setSimpleMode = useCallback((value) => {
-    setSimpleModeState(value);
-    localStorage.setItem(MODE_KEY, value ? "true" : "false");
-  }, []);
-
-  const completeTour = useCallback(() => {
-    localStorage.setItem(TOUR_KEY, "1");
-    setShowTour(false);
-  }, []);
-
-  const restartTour = useCallback(() => {
-    localStorage.removeItem(TOUR_KEY);
-    setShowTour(true);
-  }, []);
+  const setSimpleMode = useCallback(() => {}, []);
+  const completeTour = useCallback(() => {}, []);
+  const restartTour = useCallback(() => {}, []);
 
   return (
     <SimpleModeContext.Provider

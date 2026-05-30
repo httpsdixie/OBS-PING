@@ -2,14 +2,12 @@
  * TopBar — mobile hamburger + notifications + Simple mode toggle.
  */
 import { useState } from "react";
-import { Bars3Icon, BellIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, BellIcon } from "@heroicons/react/24/outline";
 import { useNotifications } from "../../hooks/useNotifications";
-import { useSimpleMode } from "../../context/SimpleModeContext";
 import NotificationsDrawer from "../notifications/NotificationsDrawer";
 
 export default function TopBar({ onMenuClick }) {
   const { unreadCount } = useNotifications();
-  const { simpleMode, setSimpleMode, restartTour } = useSimpleMode();
   const [showNotifs, setShowNotifs] = useState(false);
 
   return (
@@ -28,26 +26,6 @@ export default function TopBar({ onMenuClick }) {
         <div className="hidden md:block flex-1" />
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setSimpleMode(!simpleMode)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] border transition-colors ${
-              simpleMode
-                ? "bg-maroon-50 border-maroon-300 text-maroon-800"
-                : "border-gray-200 text-gray-600 hover:bg-gray-50"
-            }`}
-            title={simpleMode ? "Simple mode on" : "Pro mode"}
-          >
-            <SparklesIcon className="w-5 h-5" />
-            <span className="hidden sm:inline">{simpleMode ? "Simple" : "Pro"}</span>
-          </button>
-          <button
-            type="button"
-            onClick={restartTour}
-            className="hidden lg:inline text-xs text-maroon-700 hover:underline px-2 min-h-[44px]"
-          >
-            Tour
-          </button>
           <button
             onClick={() => setShowNotifs(true)}
             className="relative p-2 rounded-lg text-gray-600 hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
