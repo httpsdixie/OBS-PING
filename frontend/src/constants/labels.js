@@ -1,7 +1,7 @@
 /** Plain-language labels when Simple mode is on. */
 
 export const TASK_STATUS = {
-  assigned:       { full: "Assigned",           simple: "New — not started" },
+  assigned:       { full: "Assigned",           simple: "New" },
   acknowledged:   { full: "Acknowledged",       simple: "Seen" },
   submitted:      { full: "Submitted to Head", simple: "Turned in" },
   checked:        { full: "Checked by Head",   simple: "Head approved" },
