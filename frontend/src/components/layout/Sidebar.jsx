@@ -30,7 +30,7 @@ const NAV_LINKS = [
 ];
 
 export default function Sidebar({ onClose, onOpenAudit, onOpenPermissions, onOpenAccount }) {
-  const { user, canViewDir, canViewAudit, isSuperAdmin } = useAuth();
+  const { user, canViewDir, canViewAudit, isSuperAdmin, canViewAll } = useAuth();
   const { simpleMode } = useSimpleMode();
   const [confirmLogout, setConfirmLogout]       = useState(false);
 
@@ -41,8 +41,18 @@ export default function Sidebar({ onClose, onOpenAudit, onOpenPermissions, onOpe
   };
 
   const visibleLinks = NAV_LINKS.filter((n) => {
-    if (!n.roles.includes(user?.role)) return false;
-    if (n.to === "/directory") return canViewDir;
+    if (n.to === "/tasks") {
+      return isSuperAdmin || user?.role === "admin" || user?.role === "consultant" || canViewAll;
+    }
+    if (n.to === "/my-tasks") {
+      return user?.role === "staff" && !canViewAll;
+    }
+    if (n.to === "/directory") {
+      return isSuperAdmin || user?.role === "admin" || user?.role === "consultant" || canViewDir;
+    }
+    if (n.to === "/admin") {
+      return isSuperAdmin;
+    }
     return true;
   });
 

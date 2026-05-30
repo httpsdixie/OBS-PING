@@ -6,8 +6,8 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
 
-export default function ProtectedRoute({ children, roles }) {
-  const { user, loading } = useAuth();
+export default function ProtectedRoute({ children, roles, permission }) {
+  const { user, loading, hasPermission } = useAuth();
 
   if (loading) {
     return (
@@ -18,6 +18,10 @@ export default function ProtectedRoute({ children, roles }) {
   }
 
   if (!user) return <Navigate to="/login" replace />;
+
+  if (permission && hasPermission(permission)) {
+    return children;
+  }
 
   if (roles && !roles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />;

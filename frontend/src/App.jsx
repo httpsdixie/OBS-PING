@@ -58,7 +58,7 @@ export default function App() {
             <Route
               path="/tasks"
               element={
-                <ProtectedRoute roles={["super_admin", "admin", "consultant"]}>
+                <ProtectedRoute roles={["super_admin", "admin", "consultant"]} permission="view_all_tasks">
                   <TasksPage />
                 </ProtectedRoute>
               }
@@ -74,7 +74,7 @@ export default function App() {
             <Route
               path="/directory"
               element={
-                <ProtectedRoute roles={["super_admin", "admin", "consultant"]}>
+                <ProtectedRoute roles={["super_admin", "admin", "consultant"]} permission="view_directory">
                   <DirectoryPage />
                 </ProtectedRoute>
               }

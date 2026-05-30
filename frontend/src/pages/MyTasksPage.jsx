@@ -3,31 +3,53 @@
  * Shows tasks sorted by deadline with status badges and a detail modal.
  */
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { useTasks } from "../hooks/useTasks";
+import { useAuth } from "../context/AuthContext";
 import { useSimpleMode } from "../context/SimpleModeContext";
 import { taskStatusLabel } from "../constants/labels";
+import { createTask } from "../services/taskService";
 import TaskCard from "../components/tasks/TaskCard";
 import TaskDetail from "../components/tasks/TaskDetail";
+import TaskForm from "../components/tasks/TaskForm";
 import Modal from "../components/ui/Modal";
 import Spinner from "../components/ui/Spinner";
 import Pagination from "../components/ui/Pagination";
-import { FunnelIcon } from "@heroicons/react/24/outline";
+import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
 
 const STATUSES  = ["assigned","acknowledged","submitted","checked","needs_revision"];
 const PAGE_SIZE = 10;
 
 export default function MyTasksPage() {
   const { simpleMode } = useSimpleMode();
+  const { canWrite } = useAuth();
 
   const [statusFilter, setStatusFilter] = useState("");
   const [showFilters,  setShowFilters]  = useState(false);
   const [page,         setPage]         = useState(1);
   const [selected,     setSelected]     = useState(null);
+  const [showCreate,   setShowCreate]   = useState(false);
+  const [createBusy,   setCreateBusy]   = useState(false);
 
   const filters = { archived: false };
   if (statusFilter) filters.task_status = statusFilter;
 
   const { tasks, setTasks, loading } = useTasks(filters);
+
+  const handleCreate = async (payload) => {
+    setCreateBusy(true);
+    try {
+      const t = await createTask(payload);
+      setTasks((prev) => [t, ...prev]);
+      setShowCreate(false);
+      setPage(1);
+      toast.success("Task created.");
+    } catch (e) {
+      toast.error(e.response?.data?.detail ?? "Failed to create task.");
+    } finally {
+      setCreateBusy(false);
+    }
+  };
 
   const handleUpdated = (updated) => {
     setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
@@ -56,13 +78,20 @@ export default function MyTasksPage() {
             </p>
           )}
         </div>
-        <button
-          onClick={() => setShowFilters((v) => !v)}
-          className="btn-secondary flex items-center gap-1 text-sm"
-        >
-          <FunnelIcon className="w-4 h-4" />
-          {simpleMode ? "Filter" : "Filters"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFilters((v) => !v)}
+            className="btn-secondary flex items-center gap-1 text-sm"
+          >
+            <FunnelIcon className="w-4 h-4" />
+            {simpleMode ? "Filter" : "Filters"}
+          </button>
+          {canWrite && (
+            <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-1 text-sm">
+              <PlusIcon className="w-4 h-4" /> New Task
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -120,6 +149,11 @@ export default function MyTasksPage() {
             onDeleted={handleDeleted}
             onClose={() => setSelected(null)}
           />
+        </Modal>
+      )}
+      {showCreate && (
+        <Modal title={simpleMode ? "Assign new work" : "New Task"} onClose={() => setShowCreate(false)}>
+          <TaskForm onSubmit={handleCreate} onCancel={() => setShowCreate(false)} loading={createBusy} />
         </Modal>
       )}
     </div>
