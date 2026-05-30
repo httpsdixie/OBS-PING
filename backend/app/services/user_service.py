@@ -165,12 +165,14 @@ def transfer_eic(
     old_incoming_position = new_eic.position
 
     current_eic.role = UserRole.admin
+    current_eic.permissions = default_permissions_for_role(UserRole.admin)
     if former_eic_position:
         current_eic.position = former_eic_position
     elif current_eic.position == EIC_POSITION:
         current_eic.position = None
 
     new_eic.role = UserRole.super_admin
+    new_eic.permissions = default_permissions_for_role(UserRole.super_admin)
     new_eic.position = EIC_POSITION
 
     details = (
