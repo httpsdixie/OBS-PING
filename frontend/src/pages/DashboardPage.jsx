@@ -123,7 +123,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-gray-900">Calendar</h2>
           <Link to={isStaff ? "/my-tasks" : "/tasks"} className="text-sm text-maroon-700 hover:underline">
-            {simpleMode ? "See all tasks →" : "Open Master List →"}
+            {isStaff ? "View My Tasks →" : "Open Master List →"}
           </Link>
         </div>
         <CalendarView tasks={tasks} onTaskClick={setSelected} />
