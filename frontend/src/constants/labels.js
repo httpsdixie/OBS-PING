@@ -25,7 +25,7 @@ export const ADVANCE_ACTION = {
   "acknowledged-staff":     { full: "Submit to Head",             simple: "Turn in" },
   "needs_revision-staff":   { full: "Re-acknowledge (Revised)", simple: "Fixed — ready again" },
   "submitted-admin":        { full: "Approve — Check",          simple: "Looks good" },
-  "submitted-super_admin":  { full: "Approve — Check",          simple: "Looks good" },
+  "submitted-super_admin":  { full: "Approve & Publish Stage",  simple: "Publish" },
   "checked-super_admin":    { full: "Approve & Publish Stage",  simple: "Publish" },
 };
 

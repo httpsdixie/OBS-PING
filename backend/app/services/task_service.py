@@ -296,10 +296,10 @@ def advance_stage(db: Session, task_id: int, stage_id: int, actor: User) -> Task
 
     # --- EIC (super_admin) transitions ---
     elif role == UserRole.super_admin:
-        if stage.status != StageStatus.checked:
+        if stage.status not in (StageStatus.checked, StageStatus.submitted):
             raise HTTPException(
                 status_code=400,
-                detail="EIC can only approve stages that are in 'checked' status.",
+                detail="EIC can only approve stages that are in 'checked' or 'submitted' status.",
             )
         stage.status = StageStatus.approved
 
