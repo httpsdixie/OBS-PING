@@ -230,3 +230,26 @@ def delete_task(
         )
 
     task_service.delete_task(db, task_id)
+
+
+@router.get("/test-reminder", status_code=status.HTTP_200_OK)
+def trigger_test_reminder(db: Session = Depends(get_db)):
+    from app.services.scheduler_service import _send_deadline_reminders
+    
+    task = db.query(Task).order_by(Task.id.desc()).first()
+    if not task:
+        raise HTTPException(status_code=400, detail="No tasks found in the database. Please create a task first.")
+    
+    # Bypass date-picker buffer validation by writing directly to the database
+    task.deadline = datetime.now(timezone.utc) + timedelta(hours=36)
+    db.commit()
+    db.refresh(task)
+    
+    # Trigger the deadline checking routine instantly
+    _send_deadline_reminders()
+    
+    return {
+        "status": "success",
+        "message": f"Successfully updated deadline for Task #{task.id} ('{task.title}') to under 36 hours. Reminder email has been triggered!",
+        "assignee_id": task.assignee_id
+    }
