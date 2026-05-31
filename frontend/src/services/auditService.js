@@ -3,5 +3,5 @@
  */
 import api from "./api";
 
-export const getAuditLogs = () =>
-  api.get("/audit/").then((r) => r.data);
+export const getAuditLogs = (params = {}) =>
+  api.get("/audit/", { params }).then((r) => r.data);
