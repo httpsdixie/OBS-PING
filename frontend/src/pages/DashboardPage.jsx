@@ -16,7 +16,7 @@ import Spinner from "../components/ui/Spinner";
 import { useState } from "react";
 import { format } from "date-fns";
 
-const STAT_STATUSES = ["assigned", "acknowledged", "submitted", "checked", "needs_revision", "published"];
+const STAT_STATUSES = ["assigned", "acknowledged", "submitted", "checked", "needs_revision"];
 
 export default function DashboardPage() {
   const { user, isStaff } = useAuth();
@@ -108,7 +108,6 @@ export default function DashboardPage() {
             { key: "submitted",      color: "bg-yellow-50 text-yellow-800" },
             { key: "checked",        color: "bg-purple-50 text-purple-800" },
             { key: "needs_revision", color: "bg-red-50 text-red-700" },
-            { key: "published",      color: "bg-green-50 text-green-700" },
           ].map(({ key, color }) => (
             <div key={key} className={`card ${color}`}>
               <p className="text-2xl font-bold">{counts[key]}</p>
