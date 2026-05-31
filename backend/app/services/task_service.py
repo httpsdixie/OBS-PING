@@ -93,6 +93,25 @@ def _overall_status_from_stages(stages: list[TaskStage]) -> TaskStatus:
     return TaskStatus.published
 
 
+def sync_task_assignee(task: Task) -> None:
+    """Sync the top-level task.assignee_id with the currently active stage's assignee."""
+    if task.status == TaskStatus.published:
+        task.assignee_id = None
+        return
+
+    # Find the active stage: first stage that is not approved
+    active_stage = None
+    for stage in sorted(task.stages, key=lambda s: s.order):
+        if stage.status != StageStatus.approved:
+            active_stage = stage
+            break
+
+    if active_stage:
+        task.assignee_id = active_stage.assignee_id
+    else:
+        task.assignee_id = None
+
+
 # ---------------------------------------------------------------------------
 # CRUD
 # ---------------------------------------------------------------------------
@@ -156,6 +175,7 @@ def create_task(db: Session, payload: TaskCreate, creator: User) -> Task:
         task_id=task.id,
     )
 
+    sync_task_assignee(task)
     db.commit()
     db.refresh(task)
     return task
@@ -223,6 +243,7 @@ def update_task(db: Session, task_id: int, payload: TaskUpdate) -> Task:
             task_id=task.id,
         )
 
+    sync_task_assignee(task)
     db.commit()
     db.refresh(task)
     return task
@@ -346,6 +367,7 @@ def advance_stage(db: Session, task_id: int, stage_id: int, actor: User) -> Task
     if task.status != TaskStatus.published:
         task.status = _overall_status_from_stages(task.stages)
 
+    sync_task_assignee(task)
     db.commit()
     db.refresh(task)
     return task
@@ -385,6 +407,7 @@ def send_stage_back(db: Session, task_id: int, stage_id: int, actor: User, comme
     # Sync overall task status
     task.status = _overall_status_from_stages(task.stages)
 
+    sync_task_assignee(task)
     db.commit()
     db.refresh(task)
     return task

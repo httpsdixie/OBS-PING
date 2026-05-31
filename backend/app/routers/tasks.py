@@ -65,6 +65,64 @@ def list_tasks(
     return q.order_by(Task.deadline).all()
 
 
+@router.get("/test-reminder", status_code=status.HTTP_200_OK)
+def trigger_test_reminder(db: Session = Depends(get_db)):
+    from app.services.scheduler_service import _send_deadline_reminders
+    from app.services.task_service import sync_task_assignee
+    from app.models.task_stage import StageStatus
+    from app.models.notification import NotificationType
+
+    # Get the latest task
+    task = db.query(Task).order_by(Task.id.desc()).first()
+    if not task:
+        raise HTTPException(status_code=400, detail="No tasks found. Please create a task first.")
+
+    # 1. Reset status/stages so it is active and pending
+    task.status = TaskStatus.assigned
+    task.archived = False
+
+    # Make first stage active and others pending
+    stages = sorted(task.stages, key=lambda s: s.order)
+    for idx, stage in enumerate(stages, start=1):
+        stage.status = StageStatus.assigned if idx == 1 else StageStatus.pending
+
+    # 2. Sync assignee_id
+    sync_task_assignee(task)
+
+    if not task.assignee_id:
+        raise HTTPException(status_code=400, detail="The latest task does not have any stages with assignees.")
+
+    # 3. Update assignee email to acranedeiris@gmail.com
+    assignee = db.query(User).filter(User.id == task.assignee_id).first()
+    if assignee:
+        assignee.email = "acranedeiris@gmail.com"
+
+    # 4. Set deadline to 36 hours from now (PHT naive datetime)
+    pht_tz = timezone(timedelta(hours=8))
+    now_pht = datetime.now(timezone.utc).astimezone(pht_tz).replace(tzinfo=None)
+    task.deadline = now_pht + timedelta(hours=36)
+
+    # 5. Clear any existing deadline reminder notifications for this task today to allow re-triggering
+    today_start = now_pht.replace(hour=0, minute=0, second=0, microsecond=0)
+    db.query(Notification).filter(
+        Notification.task_id == task.id,
+        Notification.user_id == task.assignee_id,
+        Notification.type == NotificationType.deadline_reminder,
+        Notification.sent_at >= today_start
+    ).delete()
+
+    db.commit()
+    db.refresh(task)
+
+    # 6. Trigger scheduler reminder
+    _send_deadline_reminders()
+
+    return {
+        "status": "success",
+        "message": f"Successfully updated deadline for Task #{task.id} ('{task.title}') to under 36 hours. Assignee email set to 'acranedeiris@gmail.com'. Reminder email triggered successfully!"
+    }
+
+
 @router.get("/{task_id}", response_model=TaskOut)
 def get_task(
     task_id: int,
@@ -230,26 +288,3 @@ def delete_task(
         )
 
     task_service.delete_task(db, task_id)
-
-
-@router.get("/test-reminder", status_code=status.HTTP_200_OK)
-def trigger_test_reminder(db: Session = Depends(get_db)):
-    from app.services.scheduler_service import _send_deadline_reminders
-    
-    task = db.query(Task).order_by(Task.id.desc()).first()
-    if not task:
-        raise HTTPException(status_code=400, detail="No tasks found in the database. Please create a task first.")
-    
-    # Bypass date-picker buffer validation by writing directly to the database
-    task.deadline = datetime.now(timezone.utc) + timedelta(hours=36)
-    db.commit()
-    db.refresh(task)
-    
-    # Trigger the deadline checking routine instantly
-    _send_deadline_reminders()
-    
-    return {
-        "status": "success",
-        "message": f"Successfully updated deadline for Task #{task.id} ('{task.title}') to under 36 hours. Reminder email has been triggered!",
-        "assignee_id": task.assignee_id
-    }
