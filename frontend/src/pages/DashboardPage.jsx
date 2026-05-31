@@ -58,13 +58,10 @@ export default function DashboardPage() {
     const stages = task.stages ?? [];
     stages.forEach((s) => {
       const role = user?.role;
+      const isMyStage = s.assignee_id === user?.id;
       const needsMe =
-        // Staff: their stage is assigned/acknowledged/needs_revision
-        (role === "staff" && s.assignee_id === user?.id &&
-          ["assigned", "acknowledged", "needs_revision"].includes(s.status)) ||
-        // Admin: any stage is submitted
+        (isMyStage && ["assigned", "acknowledged", "needs_revision"].includes(s.status)) ||
         (role === "admin" && s.status === "submitted") ||
-        // EIC: any stage is checked
         (role === "super_admin" && s.status === "checked");
       if (needsMe) acc++;
     });
