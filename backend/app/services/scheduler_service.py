@@ -14,6 +14,7 @@ from app.db.session import SessionLocal
 from app.models.task import Task, TaskStatus
 from app.models.notification import NotificationType
 from app.services.notification_service import send as notify
+from app.services.backup_service import perform_db_backup
 
 _PENDING_STATUSES = {TaskStatus.assigned, TaskStatus.acknowledged, TaskStatus.needs_revision}
 
@@ -107,6 +108,13 @@ def start_scheduler() -> BackgroundScheduler:
         _send_deadline_reminders,
         trigger=CronTrigger(hour=1, minute=0),   # 9:00 AM PHT (1:00 AM UTC)
         id="deadline_reminders",
+        replace_existing=True,
+    )
+
+    scheduler.add_job(
+        perform_db_backup,
+        trigger=CronTrigger(hour=18, minute=0),  # 2:00 AM PHT (6:00 PM UTC)
+        id="db_backups",
         replace_existing=True,
     )
 
