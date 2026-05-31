@@ -106,7 +106,7 @@ def start_scheduler() -> BackgroundScheduler:
 
     scheduler.add_job(
         _send_deadline_reminders,
-        trigger=CronTrigger(hour=15, minute=0),   # 11:00 PM PHT (3:00 PM UTC) - TEMPORARY FOR TESTING
+        trigger=CronTrigger(hour=1, minute=0),   # 9:00 AM PHT (1:00 AM UTC)
         id="deadline_reminders",
         replace_existing=True,
     )
