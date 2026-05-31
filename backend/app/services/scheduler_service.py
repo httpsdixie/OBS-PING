@@ -46,24 +46,26 @@ def _send_deadline_reminders() -> None:
     """
     db = SessionLocal()
     try:
-        now      = datetime.now(timezone.utc)
-        in_2days = now + timedelta(days=2)
+        # Get current time in Philippine Time (UTC+8) and strip timezone for naive SQLite comparison
+        pht_tz = timezone(timedelta(hours=8))
+        now_pht = datetime.now(timezone.utc).astimezone(pht_tz).replace(tzinfo=None)
+        in_2days_pht = now_pht + timedelta(days=2)
 
         tasks = (
             db.query(Task)
             .filter(
                 Task.status.in_(_PENDING_STATUSES),
                 Task.assignee_id.isnot(None),
-                Task.deadline >= now,
-                Task.deadline <= in_2days,
+                Task.deadline >= now_pht,
+                Task.deadline <= in_2days_pht,
             )
             .all()
         )
 
         from app.models.notification import Notification
         for task in tasks:
-            # Avoid duplicate: skip if already sent a deadline_reminder today
-            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            # Avoid duplicate: skip if already sent a deadline_reminder today (PHT)
+            today_start = now_pht.replace(hour=0, minute=0, second=0, microsecond=0)
             already = (
                 db.query(Notification)
                 .filter(
@@ -77,7 +79,7 @@ def _send_deadline_reminders() -> None:
             if already:
                 continue
 
-            hours_left = int((task.deadline - now).total_seconds() / 3600)
+            hours_left = int((task.deadline - now_pht).total_seconds() / 3600)
             time_label = f"{hours_left} hours" if hours_left < 24 else "2 days"
 
             notify(
@@ -96,14 +98,14 @@ def start_scheduler() -> BackgroundScheduler:
 
     scheduler.add_job(
         _send_weekend_reminders,
-        trigger=CronTrigger(day_of_week="sat", hour=9, minute=0),
+        trigger=CronTrigger(day_of_week="sat", hour=1, minute=0),  # 9:00 AM PHT (1:00 AM UTC)
         id="weekend_reminders",
         replace_existing=True,
     )
 
     scheduler.add_job(
         _send_deadline_reminders,
-        trigger=CronTrigger(hour=9, minute=0),   # every day at 9AM
+        trigger=CronTrigger(hour=1, minute=0),   # 9:00 AM PHT (1:00 AM UTC)
         id="deadline_reminders",
         replace_existing=True,
     )
