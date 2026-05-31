@@ -16,19 +16,26 @@ import Spinner from "../components/ui/Spinner";
 import { useState } from "react";
 import { format } from "date-fns";
 
-const STAT_STATUSES = ["assigned", "acknowledged", "submitted", "checked", "needs_revision"];
+const STAT_STATUSES = ["assigned", "acknowledged", "submitted", "checked", "needs_revision", "published"];
 
 export default function DashboardPage() {
   const { user, isStaff } = useAuth();
   const { simpleMode } = useSimpleMode();
-  const { tasks, setTasks, loading }   = useTasks();
+  const { tasks, setTasks, loading: loadingActive }   = useTasks();
+  const { tasks: archivedTasks, loading: loadingArchived } = useTasks({ archived: true });
   const [selected, setSelected]        = useState(null);
   const [showQueue, setShowQueue]       = useState(false);
+
+  const loading = loadingActive || loadingArchived;
 
   if (loading) return <div className="flex justify-center py-20"><Spinner /></div>;
 
   const counts = STAT_STATUSES.reduce((acc, s) => {
-    acc[s] = tasks.filter((t) => t.status === s).length;
+    if (s === "published") {
+      acc[s] = archivedTasks.filter((t) => t.status === "published").length;
+    } else {
+      acc[s] = tasks.filter((t) => t.status === s).length;
+    }
     return acc;
   }, {});
 
@@ -108,6 +115,7 @@ export default function DashboardPage() {
             { key: "submitted",      color: "bg-yellow-50 text-yellow-800" },
             { key: "checked",        color: "bg-purple-50 text-purple-800" },
             { key: "needs_revision", color: "bg-red-50 text-red-700" },
+            { key: "published",      color: "bg-green-50 text-green-700" },
           ].map(({ key, color }) => (
             <div key={key} className={`card ${color}`}>
               <p className="text-2xl font-bold">{counts[key]}</p>
