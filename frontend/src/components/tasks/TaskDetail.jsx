@@ -50,18 +50,29 @@ function StageBadge({ status, simpleMode }) {
   );
 }
 
+const renderLoadingContent = (text) => (
+  <span className="flex items-center justify-center gap-1.5">
+    <svg className="animate-spin h-3.5 w-3.5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    {text}
+  </span>
+);
+
+
 function StageTimeline({ task, currentUser, onUpdated, viewingArchived }) {
   const { isSuperAdmin, canPoke } = useAuth();
   const { simpleMode } = useSimpleMode();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(null); // { type, stageId } or null
   const [revisionStageId, setRevisionStageId] = useState(null);
   const [revisionComment, setRevisionComment] = useState("");
 
   const role = currentUser?.role;
   const stages = task.stages ?? [];
 
-  const run = async (fn, successMsg) => {
-    setBusy(true);
+  const run = async (type, stageId, fn, successMsg) => {
+    setBusy({ type, stageId });
     try {
       const updated = await fn();
       toast.success(successMsg);
@@ -69,25 +80,36 @@ function StageTimeline({ task, currentUser, onUpdated, viewingArchived }) {
     } catch (e) {
       toast.error(e.response?.data?.detail ?? "Action failed.");
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
   const handleAdvance = (stageId) =>
-    run(() => advanceStage(task.id, stageId), "Stage advanced.");
+    run("advance", stageId, () => advanceStage(task.id, stageId), "Stage advanced.");
 
-  const handleSendBack = () =>
-    run(() => sendStageBack(task.id, revisionStageId, revisionComment), "Sent back for revision.");
+  const handleSendBack = async () => {
+    setBusy({ type: "send_back", stageId: revisionStageId });
+    try {
+      const updated = await sendStageBack(task.id, revisionStageId, revisionComment);
+      toast.success("Sent back for revision.");
+      onUpdated(updated);
+      setRevisionStageId(null);
+    } catch (e) {
+      toast.error(e.response?.data?.detail ?? "Failed.");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const handlePoke = async (stageId) => {
-    setBusy(true);
+    setBusy({ type: "poke", stageId });
     try {
       await pokeStage(task.id, stageId);
       toast.success("Reminder sent.");
     } catch (e) {
       toast.error(e.response?.data?.detail ?? "Failed to send reminder.");
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
@@ -152,16 +174,18 @@ function StageTimeline({ task, currentUser, onUpdated, viewingArchived }) {
                   </span>
                 </p>
 
-                {/* Action buttons */}
+                 {/* Action buttons */}
                 {!viewingArchived && isActive && (
                   <div className="flex flex-wrap gap-2 pt-1">
                     {(staffCanAct || adminCanAct || eicCanAct) && advanceLabel && (
                       <button
-                        className="btn-primary text-xs py-1 px-3"
+                        className="btn-primary text-xs py-1 px-3 flex items-center justify-center min-h-[28px]"
                         onClick={() => handleAdvance(stage.id)}
-                        disabled={busy}
+                        disabled={busy !== null}
                       >
-                        {advanceLabel}
+                        {busy?.type === "advance" && busy?.stageId === stage.id
+                          ? renderLoadingContent("Working...")
+                          : advanceLabel}
                       </button>
                     )}
 
@@ -169,7 +193,7 @@ function StageTimeline({ task, currentUser, onUpdated, viewingArchived }) {
                       <button
                         className="btn-secondary text-xs py-1 px-3 text-red-600 border-red-300 hover:bg-red-50"
                         onClick={() => { setRevisionComment(""); setRevisionStageId(stage.id); }}
-                        disabled={busy}
+                        disabled={busy !== null}
                       >
                         Send Back
                       </button>
@@ -177,11 +201,17 @@ function StageTimeline({ task, currentUser, onUpdated, viewingArchived }) {
 
                     {canPokeStage && (
                       <button
-                        className="btn-secondary text-xs py-1 px-3 flex items-center gap-1"
+                        className="btn-secondary text-xs py-1 px-3 flex items-center gap-1 min-h-[28px]"
                         onClick={() => handlePoke(stage.id)}
-                        disabled={busy}
+                        disabled={busy !== null}
                       >
-                        <BellAlertIcon className="w-3.5 h-3.5" /> Poke
+                        {busy?.type === "poke" && busy?.stageId === stage.id ? (
+                          renderLoadingContent("Poking...")
+                        ) : (
+                          <>
+                            <BellAlertIcon className="w-3.5 h-3.5" /> Poke
+                          </>
+                        )}
                       </button>
                     )}
                   </div>
@@ -210,15 +240,21 @@ function StageTimeline({ task, currentUser, onUpdated, viewingArchived }) {
               autoFocus
             />
             <div className="flex justify-end gap-3">
-              <button className="btn-secondary" onClick={() => setRevisionStageId(null)}>
+              <button
+                className="btn-secondary"
+                disabled={busy !== null}
+                onClick={() => setRevisionStageId(null)}
+              >
                 Cancel
               </button>
               <button
-                className="btn-danger"
-                disabled={!revisionComment.trim() || busy}
-                onClick={() => { setRevisionStageId(null); handleSendBack(); }}
+                className="btn-danger flex items-center justify-center min-w-[100px]"
+                disabled={!revisionComment.trim() || busy !== null}
+                onClick={handleSendBack}
               >
-                Send Back
+                {busy?.type === "send_back" && busy?.stageId === revisionStageId
+                  ? renderLoadingContent("Sending...")
+                  : "Send Back"}
               </button>
             </div>
           </div>

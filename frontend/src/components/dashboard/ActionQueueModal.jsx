@@ -23,6 +23,17 @@ const STAGE_STYLES = {
   approved:       "bg-green-100 text-green-700",
 };
 
+const renderLoadingContent = (text) => (
+  <span className="flex items-center justify-center gap-1.5">
+    <svg className="animate-spin h-3.5 w-3.5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    {text}
+  </span>
+);
+
+
 export default function ActionQueueModal({ tasks, onTaskUpdated, onClose }) {
   const { user } = useAuth();
   const { simpleMode } = useSimpleMode();
@@ -150,18 +161,18 @@ export default function ActionQueueModal({ tasks, onTaskUpdated, onClose }) {
                 <div className="flex gap-2 pt-1">
                   {advLabel && (
                     <button
-                      className="btn-primary text-xs py-1.5 px-3"
+                      className="btn-primary text-xs py-1.5 px-3 flex items-center justify-center min-h-[32px]"
                       onClick={() => handleAdvance(task, stage)}
-                      disabled={isBusy}
+                      disabled={busy !== null}
                     >
-                      {isBusy ? "…" : advLabel}
+                      {isBusy ? renderLoadingContent("Working...") : advLabel}
                     </button>
                   )}
                   {canSendBack(stage) && (
                     <button
                       className="btn-secondary text-xs py-1.5 px-3 text-red-600 border-red-300 hover:bg-red-50"
                       onClick={() => { setRevisionComment(""); setRevisionStageId(stage.id); }}
-                      disabled={isBusy}
+                      disabled={busy !== null}
                     >
                       Send Back
                     </button>
@@ -187,13 +198,19 @@ export default function ActionQueueModal({ tasks, onTaskUpdated, onClose }) {
               onChange={(e) => setRevisionComment(e.target.value)}
             />
             <div className="flex justify-end gap-3">
-              <button className="btn-secondary" onClick={() => setRevisionStageId(null)}>Cancel</button>
               <button
-                className="btn-danger"
-                disabled={!revisionComment.trim() || busy === revisionStageId}
+                className="btn-secondary"
+                disabled={busy !== null}
+                onClick={() => setRevisionStageId(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn-danger flex items-center justify-center min-w-[100px]"
+                disabled={!revisionComment.trim() || busy !== null}
                 onClick={handleSendBack}
               >
-                Send Back
+                {busy === revisionStageId ? renderLoadingContent("Sending...") : "Send Back"}
               </button>
             </div>
           </div>
