@@ -99,39 +99,6 @@ if inspector.has_table("users"):
         except Exception as e:
             print(f"Migration error: {e}")
 
-# One-time startup database email updates (will be removed in the next commit)
-try:
-    db_session = SessionLocal()
-    from app.models.user import User
-    
-    UPDATES = {
-        "Jhon Dhave T. Opsimar": "jhondhave.opsimar@evsu.edu.ph",
-        "Joseph Bryan P. Paculba": "josephbryan.paculba@evsu.edu.ph",
-        "Janna Payod": "janna.payod@evsu.edu.ph",
-        "Laika V. Lato": "laika.lato@evsu.edu.ph",
-        "Jessie Martin C. Morallos": "jessiemartin.morallos@evsu.edu.ph",
-        "Jessa Joy M. Belencio": "jessajoy.belencio@evsu.edu.ph",
-        "Ashbie Merino": "ashbie.merino@evsu.edu.ph",
-        "John Carlo Donayre": "johncarlo.donayre@evsu.edu.ph",
-        "Jaira Camelle Casane": "jairacamelle.casane@evsu.edu.ph",
-        "Mishelle T. Bohol": "mishelle.bohol@evsu.edu.ph",
-        "Alvin John Marquez": "alvinjohn.marquez@evsu.edu.ph",
-        "Maria Rhez C. Pajaron": "mariarhez.pajaron@evsu.edu.ph",
-        "Manny Jan A. Surima": "mannyjan.surima@evsu.edu.ph",
-        "Justin Bardiago": "justin.bardiago@evsu.edu.ph",
-    }
-    
-    for name, email in UPDATES.items():
-        u = db_session.query(User).filter(User.name.ilike(name)).first()
-        if u:
-            u.email = email
-            print(f"Updated email for {name} to {email}")
-            
-    db_session.commit()
-    db_session.close()
-except Exception as pe:
-    print(f"Startup database email update error: {pe}")
-
 
 
 
