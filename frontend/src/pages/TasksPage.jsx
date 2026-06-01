@@ -3,7 +3,7 @@
  * pagination, and task creation for admins (UC-01).
  */
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import toast from "react-hot-toast";
 import { useTasks } from "../hooks/useTasks";
 import { useAuth } from "../context/AuthContext";
@@ -34,6 +34,7 @@ const PAGE_SIZE  = 10;
 export default function TasksPage() {
   const { canWrite, canViewAll, user } = useAuth();
   const { simpleMode } = useSimpleMode();
+  const minDate = addDays(new Date(), 2);
 
   const [tab,            setTab]            = useState("all"); // "all" | "mine"
   const [statusFilter,   setStatusFilter]   = useState("");
@@ -304,6 +305,7 @@ export default function TasksPage() {
           tasks={tasks}
           onTaskClick={setSelected}
           onDaySelect={canWrite ? handleDayClick : undefined}
+          minDate={canWrite ? minDate : null}
         />
       )}
 
