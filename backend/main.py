@@ -99,24 +99,6 @@ if inspector.has_table("users"):
         except Exception as e:
             print(f"Migration error: {e}")
 
-# One-time startup purge of tasks (will be removed in the next commit)
-try:
-    db_session = SessionLocal()
-    from app.models.task import Task
-    from app.models.notification import Notification
-    from app.models.audit_log import AuditLog
-    from app.models.otp import OtpCode
-    
-    db_session.query(Notification).delete()
-    db_session.query(Task).delete()
-    db_session.query(AuditLog).delete()
-    db_session.query(OtpCode).delete()
-    db_session.commit()
-    print("Startup task purge complete!")
-    db_session.close()
-except Exception as pe:
-    print(f"Startup task purge error: {pe}")
-
 
 
 @asynccontextmanager
