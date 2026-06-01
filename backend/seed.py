@@ -101,11 +101,11 @@ db = SessionLocal()
 STAFF = [
     # ── Editorial Board ─────────────────────────────────────────────────────
     ("Trisha Mae Ymas",             "eic",              UserRole.super_admin, "Editor-in-Chief"),
-    ("Jessie Martin C. Morallos",   "assoc.editor",     UserRole.admin,       "Associate Editor"),
+    ("Jessie Martin C. Morallos",   "assoc.editor",     UserRole.admin,       "Associate Editor", "jessiemartin.morallos@evsu.edu.ph"),
     ("Angela Faith M. Senillo",     "managing.editor",  UserRole.admin,       "Managing Editor"),
-    ("Alvin John Marquez",          "circulation",      UserRole.admin,       "Circulation Manager"),
+    ("Alvin John Marquez",          "circulation",      UserRole.admin,       "Circulation Manager", "alvinjohn.marquez@evsu.edu.ph"),
     ("Jonathan A. Labiste Jr.",     "creative.dir",     UserRole.admin,       "Creative Director"),
-    ("Jhon Dhave T. Opsimar",       "multimedia.dir",   UserRole.admin,       "Multimedia Director"),
+    ("Jhon Dhave T. Opsimar",       "multimedia.dir",   UserRole.admin,       "Multimedia Director", "jhondhave.opsimar@evsu.edu.ph"),
 
     # ── Section Editors ──────────────────────────────────────────────────────
     ("Rheina Mae K. Capucao",       "news.editor",      UserRole.admin,       "News Editor"),
@@ -116,19 +116,19 @@ STAFF = [
     ("Marites Calixtro",            "writer.calixtro",  UserRole.staff,       "Writer"),
     ("Jerico Ombal",                "writer.ombal",     UserRole.staff,       "Writer"),
     ("Adelene I. Dela Cruz",        "writer.delacruz",  UserRole.staff,       "Writer"),
-    ("Joseph Bryan P. Paculba",     "writer.paculba",   UserRole.staff,       "Writer"),
-    ("Mishelle T. Bohol",           "writer.bohol",     UserRole.staff,       "Writer"),
-    ("Jaira Camelle Casane",        "writer.casane",    UserRole.staff,       "Writer"),
-    ("Maria Rhez C. Pajaron",       "writer.pajaron",   UserRole.staff,       "Writer"),
+    ("Joseph Bryan P. Paculba",     "writer.paculba",   UserRole.staff,       "Writer", "josephbryan.paculba@evsu.edu.ph"),
+    ("Mishelle T. Bohol",           "writer.bohol",     UserRole.staff,       "Writer", "mishelle.bohol@evsu.edu.ph"),
+    ("Jaira Camelle Casane",        "writer.casane",    UserRole.staff,       "Writer", "jairacamelle.casane@evsu.edu.ph"),
+    ("Maria Rhez C. Pajaron",       "writer.pajaron",   UserRole.staff,       "Writer", "mariarhez.pajaron@evsu.edu.ph"),
 
     # ── Photojournalists ─────────────────────────────────────────────────────
     ("Jhared Martin M. Tamse",      "photo.head",       UserRole.admin,       "Head Photojournalist"),
     ("Ivan Ray Pagalan",            "photo.pagalan",    UserRole.staff,       "Photojournalist"),
     ("Maeann Mahusay",              "photo.mahusay",    UserRole.staff,       "Photojournalist"),
     ("Trisha Mae Francisco",        "photo.francisco",  UserRole.staff,       "Photojournalist"),
-    ("John Carlo Donayre",          "photo.donayre",    UserRole.staff,       "Photojournalist"),
+    ("John Carlo Donayre",          "photo.donayre",    UserRole.staff,       "Photojournalist", "johncarlo.donayre@evsu.edu.ph"),
     ("Mitch Edial Avila",           "photo.avila",      UserRole.staff,       "Photojournalist"),
-    ("Laika V. Lato",               "photo.lato",       UserRole.staff,       "Photojournalist"),
+    ("Laika V. Lato",               "photo.lato",       UserRole.staff,       "Photojournalist", "laika.lato@evsu.edu.ph"),
 
     # ── Video Editors ────────────────────────────────────────────────────────
     ("Grace Ruelo",                 "video.head",       UserRole.admin,       "Head Video Editor"),
@@ -136,7 +136,7 @@ STAFF = [
     ("Karen Diano",                 "video.diano",      UserRole.staff,       "Video Editor"),
 
     # ── Correspondents ───────────────────────────────────────────────────────
-    ("Janna Payod",                 "corr.head",        UserRole.admin,       "Head Correspondent"),
+    ("Janna Payod",                 "corr.head",        UserRole.admin,       "Head Correspondent", "janna.payod@evsu.edu.ph"),
     ("Zhenlie Pongos",              "corr.pongos",      UserRole.staff,       "Correspondent"),
     ("Aura Lyneth Lumabas",         "corr.lumabas",     UserRole.staff,       "Correspondent"),
     ("Rose Repollo",                "corr.repollo",     UserRole.staff,       "Correspondent"),
@@ -144,15 +144,15 @@ STAFF = [
     ("James Ruel Lopez",            "corr.lopez",       UserRole.staff,       "Correspondent"),
     ("Ma. Angeline Jumao-as",       "corr.jumaoas",     UserRole.staff,       "Correspondent"),
     ("Ricogie B. Malinao",          "corr.malinao",     UserRole.staff,       "Correspondent"),
-    ("Ashbie Merino",               "corr.merino",      UserRole.staff,       "Correspondent"),
-    ("Manny Jan A. Surima",         "corr.surima",      UserRole.staff,       "Correspondent"),
+    ("Ashbie Merino",               "corr.merino",      UserRole.staff,       "Correspondent", "ashbie.merino@evsu.edu.ph"),
+    ("Manny Jan A. Surima",         "corr.surima",      UserRole.staff,       "Correspondent", "mannyjan.surima@evsu.edu.ph"),
 
     # ── Layout Artists ───────────────────────────────────────────────────────
     ("Dixie Shanne Perida",         "layout.head",      UserRole.admin,       "Head Layout Artist", "dixieshanne.perida@evsu.edu.ph"),
-    ("Justin Bardiago",             "layout.bardiago",  UserRole.staff,       "Layout Artist"),
+    ("Justin Bardiago",             "layout.bardiago",  UserRole.staff,       "Layout Artist", "justin.bardiago@evsu.edu.ph"),
     ("Trisha Mae Manawatao",        "layout.manawatao", UserRole.staff,       "Layout Artist"),
     ("Mildred Lacbayo",             "layout.lacbayo",   UserRole.staff,       "Layout Artist"),
-    ("Jessa Joy M. Belencio",       "layout.belencio",  UserRole.staff,       "Layout Artist"),
+    ("Jessa Joy M. Belencio",       "layout.belencio",  UserRole.staff,       "Layout Artist", "jessajoy.belencio@evsu.edu.ph"),
 
     # ── Illustrators ─────────────────────────────────────────────────────────
     ("April Grace Panta",           "illus.head",       UserRole.admin,       "Head Illustrator"),
