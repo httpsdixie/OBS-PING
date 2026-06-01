@@ -64,4 +64,14 @@ export async function getMe() {
   return data;
 }
 
+export async function getMaintenanceStatus() {
+  const { data } = await api.get("/auth/maintenance-status");
+  return data;
+}
+
+export async function toggleMaintenanceStatus(enabled) {
+  const { data } = await api.post("/auth/maintenance-toggle", { enabled });
+  return data;
+}
+
 export { apiError };

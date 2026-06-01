@@ -32,6 +32,15 @@ def get_current_user(
             detail="User not found or deactivated",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Global maintenance mode check — blocks all non-EIC users
+    from app.services.system_setting_service import get_setting_bool
+    if get_setting_bool(db, "maintenance_mode", default=False) and user.role != UserRole.super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="System is under maintenance. Please try again later.",
+        )
+
     return user
 
 

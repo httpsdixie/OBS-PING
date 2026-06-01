@@ -60,6 +60,14 @@ def login_request_otp(payload: LoginInitRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
         )
+
+    from app.services.system_setting_service import get_setting_bool
+    from app.models.user import UserRole
+    if get_setting_bool(db, "maintenance_mode", default=False) and user.role != UserRole.super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="System is under maintenance. Please try again later.",
+        )
     if not settings.LOGIN_OTP_ENABLED:
         return OtpChallengeResponse(
             otp_required=False,
@@ -134,3 +142,31 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     user.hashed_password = hash_password(payload.new_password)
     db.commit()
     return {"message": "Password updated. You can sign in with your new password."}
+
+
+@router.get("/maintenance-status")
+def get_maintenance_status(db: Session = Depends(get_db)):
+    from app.services.system_setting_service import get_setting_bool
+    return {"maintenance_mode": get_setting_bool(db, "maintenance_mode", default=False)}
+
+
+from app.dependencies.auth import get_current_user
+
+@router.post("/maintenance-toggle")
+def toggle_maintenance_status(
+    payload: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    from app.models.user import UserRole
+    if current_user.role != UserRole.super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the EIC can toggle maintenance mode.",
+        )
+    
+    enabled = payload.get("enabled", False)
+    from app.services.system_setting_service import set_setting_bool
+    set_setting_bool(db, "maintenance_mode", enabled)
+    return {"status": "success", "maintenance_mode": enabled}
+

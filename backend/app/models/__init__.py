@@ -5,3 +5,4 @@ from app.models.task_stage import TaskStage, StageStatus                    # no
 from app.models.notification import Notification, NotificationType          # noqa: F401
 from app.models.audit_log import AuditLog                                   # noqa: F401
 from app.models.otp import OtpCode, OtpPurpose                              # noqa: F401
+from app.models.system_setting import SystemSetting                        # noqa: F401

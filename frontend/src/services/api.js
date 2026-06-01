@@ -16,7 +16,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Redirect to login on 401 (skip for auth requests to allow inline login error handling)
+// Redirect to login on 401, redirect to maintenance on 503
 api.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -24,6 +24,9 @@ api.interceptors.response.use(
     if (err.response?.status === 401 && !isAuthRequest) {
       localStorage.removeItem("token");
       window.location.href = "/login";
+    }
+    if (err.response?.status === 503) {
+      window.location.href = "/maintenance";
     }
     return Promise.reject(err);
   }

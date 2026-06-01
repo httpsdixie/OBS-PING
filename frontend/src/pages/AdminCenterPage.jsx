@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { useUsers } from "../hooks/useUsers";
 import { useAuth } from "../context/AuthContext";
 import { createUser, updateUser, transferEIC, getUser } from "../services/userService";
+import { getMaintenanceStatus, toggleMaintenanceStatus } from "../services/authService";
 import RoleBadge from "../components/ui/RoleBadge";
 import Modal from "../components/ui/Modal";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
@@ -351,6 +352,30 @@ export default function AdminCenterPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [showSuccession, setShowSuccession] = useState(false);
   const [editing, setEditing]       = useState(null);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [toggling, setToggling]     = useState(false);
+
+  useEffect(() => {
+    getMaintenanceStatus().then((data) => setMaintenanceMode(data.maintenance_mode));
+  }, []);
+
+  const handleToggleMaintenance = async () => {
+    setToggling(true);
+    const nextState = !maintenanceMode;
+    try {
+      await toggleMaintenanceStatus(nextState);
+      setMaintenanceMode(nextState);
+      toast.success(
+        nextState
+          ? "Maintenance Mode is now ENABLED. Non-EIC members are locked out."
+          : "Maintenance Mode is now DISABLED. All systems online."
+      );
+    } catch (err) {
+      toast.error("Failed to toggle maintenance mode.");
+    } finally {
+      setToggling(false);
+    }
+  };
 
   const PAGE_SIZE = 10;
 
@@ -386,6 +411,38 @@ export default function AdminCenterPage() {
             <UserPlusIcon className="w-4 h-4" /> Create Account
           </button>
         </div>
+      </div>
+
+      {/* Maintenance Mode Alert & Toggle Card */}
+      <div className={`card border p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300 ${
+        maintenanceMode 
+          ? "border-red-300 bg-red-50/50 shadow-md ring-1 ring-red-300" 
+          : "border-slate-200 bg-slate-50/50"
+      }`}>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className={`w-2.5 h-2.5 rounded-full ${maintenanceMode ? "bg-red-600 animate-pulse" : "bg-green-600"}`}></span>
+            <h3 className="font-bold text-gray-900 text-sm md:text-base">
+              {maintenanceMode ? "System Under Maintenance" : "System Maintenance Protection"}
+            </h3>
+          </div>
+          <p className="text-xs text-gray-500 leading-relaxed max-w-2xl">
+            {maintenanceMode 
+              ? "All staff and standard editor accounts are currently locked out with a polite construction page. Toggle off to bring ObsPing back online." 
+              : "Enable this to safely lock staff out while you perform role succession, database upgrades, or manual data backups."}
+          </p>
+        </div>
+        <button
+          onClick={handleToggleMaintenance}
+          disabled={toggling}
+          className={`flex-shrink-0 min-h-[44px] px-5 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 active:scale-[0.98] ${
+            maintenanceMode
+              ? "btn-danger shadow-md shadow-red-950/20"
+              : "btn-secondary text-gray-700 bg-white border border-gray-200 hover:bg-gray-50"
+          }`}
+        >
+          {toggling ? "Saving..." : maintenanceMode ? "Turn Off Maintenance" : "Turn On Maintenance"}
+        </button>
       </div>
 
       {/* Search + role filter */}

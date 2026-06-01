@@ -15,6 +15,7 @@ import TasksPage         from "./pages/TasksPage";
 import MyTasksPage       from "./pages/MyTasksPage";
 import DirectoryPage     from "./pages/DirectoryPage";
 import AdminCenterPage   from "./pages/AdminCenterPage";
+import MaintenancePage   from "./pages/MaintenancePage";
 
 export default function App() {
   return (
@@ -82,8 +83,9 @@ export default function App() {
           )}
         </Toaster>
         <Routes>
-          {/* Public */}
+           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           {/* Protected shell */}

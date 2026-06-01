@@ -12,6 +12,7 @@ import {
   resetPasswordWithOtp,
   getMe,
   apiError,
+  getMaintenanceStatus,
 } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 
@@ -82,6 +83,32 @@ export default function LoginPage() {
       return () => clearTimeout(timer);
     }
   }, [resendCooldown]);
+
+  useEffect(() => {
+    // Check if system is in maintenance mode and we don't have bypass flag
+    const checkMaintenance = async () => {
+      const bypass = sessionStorage.getItem("admin_bypass") === "true";
+      const queryParams = new URLSearchParams(window.location.search);
+      const urlBypass = queryParams.get("bypass") === "true" || queryParams.get("admin") === "true";
+      
+      if (urlBypass) {
+        sessionStorage.setItem("admin_bypass", "true");
+        return;
+      }
+      
+      if (bypass) return;
+      
+      try {
+        const data = await getMaintenanceStatus();
+        if (data.maintenance_mode) {
+          navigate("/maintenance");
+        }
+      } catch (err) {
+        // Safe fallback
+      }
+    };
+    checkMaintenance();
+  }, [navigate]);
 
   const resetFlow = () => {
     setStep("credentials");
