@@ -6,7 +6,10 @@ from app.models.user import UserRole, UserStatus
 
 
 class UserBase(BaseModel):
-    name: str
+    first_name: str
+    middle_name: Optional[str] = None
+    last_name: str
+    extension: Optional[str] = None
     email: EmailStr
     role: UserRole = UserRole.staff
     position: Optional[str] = None
@@ -14,6 +17,12 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+
+    @field_validator("password")
+    @classmethod
+    def password_strength_check(cls, v: str) -> str:
+        from app.core.security import validate_strong_password
+        return validate_strong_password(v)
 
 
 class UserAdminUpdate(BaseModel):
@@ -30,29 +39,42 @@ class UserPasswordChange(BaseModel):
 
     @field_validator("new_password")
     @classmethod
-    def password_min_length(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("New password must be at least 8 characters.")
-        return v
+    def password_strength_check(cls, v: str) -> str:
+        from app.core.security import validate_strong_password
+        return validate_strong_password(v)
 
 
 class UserSelfUpdate(BaseModel):
-    name: Optional[str] = None
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str] = None
+    extension: Optional[str] = None
     email: Optional[EmailStr] = None
 
-    @field_validator("name")
+    @field_validator("first_name")
     @classmethod
-    def name_not_blank(cls, v: Optional[str]) -> Optional[str]:
+    def first_name_not_blank(cls, v: Optional[str]) -> Optional[str]:
         if v is None:
             return v
         stripped = v.strip()
         if not stripped:
-            raise ValueError("Name cannot be empty.")
+            raise ValueError("First name cannot be empty.")
+        return stripped
+
+    @field_validator("last_name")
+    @classmethod
+    def last_name_not_blank(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("Last name cannot be empty.")
         return stripped
 
 
 class UserOut(UserBase):
     id: int
+    name: str
     status: UserStatus
     permissions: List[str] = []
     created_at: datetime

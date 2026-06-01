@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class Token(BaseModel):
@@ -43,5 +43,11 @@ class ForgotPasswordVerifyResponse(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     reset_token: str
-    new_password: str = Field(min_length=8)
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_strength_check(cls, v: str) -> str:
+        from app.core.security import validate_strong_password
+        return validate_strong_password(v)
 

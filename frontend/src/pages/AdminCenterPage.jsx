@@ -30,19 +30,63 @@ const MODULE_PERMISSIONS = [
   { key: "create_tasks",   label: "Create Tasks",      desc: "Create and assign tasks to staff" },
   { key: "poke",           label: "Send Poke Reminders", desc: "Send manual reminders to assignees" },
 ];
+const checkPasswordStrength = (pwd) => {
+  const reqs = {
+    length: pwd.length >= 8,
+    upper: /[A-Z]/.test(pwd),
+    lower: /[a-z]/.test(pwd),
+    number: /[0-9]/.test(pwd),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
+  };
+  const score = Object.values(reqs).filter(Boolean).length;
+  let strength = "Very Weak";
+  let color = "bg-red-500";
+  let textColor = "text-red-500";
+  if (score === 5) {
+    strength = "Strong (Secure)";
+    color = "bg-green-600";
+    textColor = "text-green-600";
+  } else if (score >= 3) {
+    strength = "Good";
+    color = "bg-yellow-500";
+    textColor = "text-yellow-600";
+  } else if (score >= 2) {
+    strength = "Fair";
+    color = "bg-orange-500";
+    textColor = "text-orange-600";
+  }
+  return { reqs, score, strength, color, textColor };
+};
+
 // ── Create Account Modal ─────────────────────────────────────────────────────
 function CreateAccountModal({ onCreated, onClose }) {
   const [form, setForm] = useState({
-    name: "", email: "", password: "", role: "staff", position: "",
+    first_name: "", middle_name: "", last_name: "", extension: "",
+    email: "", password: "", role: "staff", position: "",
   });
   const [busy, setBusy] = useState(false);
   const set = (f) => (e) => setForm((p) => ({ ...p, [f]: e.target.value }));
 
+  const passwordStrength = checkPasswordStrength(form.password);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (passwordStrength.score < 5) {
+      toast.error("Password must meet all security requirements.");
+      return;
+    }
     setBusy(true);
     try {
-      const user = await createUser(form);
+      const user = await createUser({
+        first_name: form.first_name.trim(),
+        middle_name: form.middle_name.trim() || null,
+        last_name: form.last_name.trim(),
+        extension: form.extension.trim() || null,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+        position: form.position || null,
+      });
       toast.success(`Account created for ${user.name}.`);
       onCreated(user);
       onClose();
@@ -56,10 +100,38 @@ function CreateAccountModal({ onCreated, onClose }) {
   return (
     <Modal title="Create New Account" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="label">Full Name *</label>
-          <input className="input" value={form.name} onChange={set("name")} required />
+        {/* Name Input Row 1 */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">First Name *</label>
+            <input className="input" value={form.first_name} onChange={set("first_name")} required placeholder="e.g. Jane" />
+          </div>
+          <div>
+            <label className="label">Middle Name</label>
+            <input className="input" value={form.middle_name} onChange={set("middle_name")} placeholder="e.g. Smith" />
+          </div>
         </div>
+
+        {/* Name Input Row 2 */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="col-span-2">
+            <label className="label">Last Name *</label>
+            <input className="input" value={form.last_name} onChange={set("last_name")} required placeholder="e.g. Doe" />
+          </div>
+          <div>
+            <label className="label">Extension</label>
+            <select className="input" value={form.extension} onChange={set("extension")}>
+              <option value="">None</option>
+              <option value="Jr.">Jr.</option>
+              <option value="Sr.">Sr.</option>
+              <option value="II">II</option>
+              <option value="III">III</option>
+              <option value="IV">IV</option>
+              <option value="V">V</option>
+            </select>
+          </div>
+        </div>
+
         <div>
           <label className="label">Email *</label>
           <input
@@ -69,7 +141,50 @@ function CreateAccountModal({ onCreated, onClose }) {
         </div>
         <div>
           <label className="label">Password *</label>
-          <input className="input" type="password" value={form.password} onChange={set("password")} required />
+          <input className="input" type="password" value={form.password} onChange={set("password")} required placeholder="••••••••" />
+          {form.password && (
+            <div className="mt-2 space-y-1.5 p-3 bg-gray-50 rounded-xl border border-gray-100 transition-all duration-300">
+              <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div className={`h-full ${passwordStrength.color} transition-all duration-300`} style={{ width: `${(passwordStrength.score / 5) * 100}%` }}></div>
+              </div>
+              <div className="flex justify-between items-center text-xs font-semibold">
+                <span className="text-gray-600">Password Strength:</span>
+                <span className={passwordStrength.textColor}>{passwordStrength.strength}</span>
+              </div>
+              <ul className="text-[11px] grid grid-cols-2 gap-x-2 gap-y-1 text-gray-500 pt-1 border-t border-gray-200/50 mt-1">
+                <li className="flex items-center gap-1">
+                  <span className={passwordStrength.reqs.length ? "text-green-600 font-bold" : "text-gray-300"}>
+                    {passwordStrength.reqs.length ? "✓" : "○"}
+                  </span>
+                  <span className={passwordStrength.reqs.length ? "text-gray-700 font-medium" : ""}>Min 8 characters</span>
+                </li>
+                <li className="flex items-center gap-1">
+                  <span className={passwordStrength.reqs.upper ? "text-green-600 font-bold" : "text-gray-300"}>
+                    {passwordStrength.reqs.upper ? "✓" : "○"}
+                  </span>
+                  <span className={passwordStrength.reqs.upper ? "text-gray-700 font-medium" : ""}>Uppercase (A-Z)</span>
+                </li>
+                <li className="flex items-center gap-1">
+                  <span className={passwordStrength.reqs.lower ? "text-green-600 font-bold" : "text-gray-300"}>
+                    {passwordStrength.reqs.lower ? "✓" : "○"}
+                  </span>
+                  <span className={passwordStrength.reqs.lower ? "text-gray-700 font-medium" : ""}>Lowercase (a-z)</span>
+                </li>
+                <li className="flex items-center gap-1">
+                  <span className={passwordStrength.reqs.number ? "text-green-600 font-bold" : "text-gray-300"}>
+                    {passwordStrength.reqs.number ? "✓" : "○"}
+                  </span>
+                  <span className={passwordStrength.reqs.number ? "text-gray-700 font-medium" : ""}>Number (0-9)</span>
+                </li>
+                <li className="flex items-center gap-1 col-span-2">
+                  <span className={passwordStrength.reqs.special ? "text-green-600 font-bold" : "text-gray-300"}>
+                    {passwordStrength.reqs.special ? "✓" : "○"}
+                  </span>
+                  <span className={passwordStrength.reqs.special ? "text-gray-700 font-medium" : ""}>Special char (!@#$...)</span>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>

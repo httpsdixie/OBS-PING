@@ -41,12 +41,33 @@ def _sync_position_for_role(user: User) -> str | None:
     return None
 
 
+def combine_names(first: str, middle: str | None, last: str, ext: str | None) -> str:
+    parts = [first]
+    if middle:
+        parts.append(middle)
+    parts.append(last)
+    if ext:
+        parts.append(ext)
+    return " ".join(p.strip() for p in parts if p and p.strip())
+
+
 def create_user(db: Session, payload: UserCreate, created_by_id: int) -> User:
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status_code=400, detail="Email already registered.")
 
+    full_name = combine_names(
+        payload.first_name,
+        payload.middle_name,
+        payload.last_name,
+        payload.extension,
+    )
+
     user = User(
-        name=payload.name,
+        first_name=payload.first_name,
+        middle_name=payload.middle_name,
+        last_name=payload.last_name,
+        extension=payload.extension,
+        name=full_name,
         email=payload.email,
         hashed_password=hash_password(payload.password),
         role=payload.role,
@@ -116,10 +137,39 @@ def update_user(db: Session, user_id: int, payload: UserAdminUpdate, updated_by_
 
 def update_self(db: Session, user: User, payload: UserSelfUpdate) -> User:
     changes: list[str] = []
+    name_changed = False
 
-    if payload.name is not None and user.name != payload.name:
-        user.name = payload.name
-        changes.append(f"name→{payload.name}")
+    if payload.first_name is not None and user.first_name != payload.first_name:
+        user.first_name = payload.first_name
+        changes.append(f"first_name→{payload.first_name}")
+        name_changed = True
+
+    if payload.middle_name is not None and user.middle_name != payload.middle_name:
+        user.middle_name = payload.middle_name
+        changes.append(f"middle_name→{payload.middle_name or '(none)'}")
+        name_changed = True
+
+    if payload.last_name is not None and user.last_name != payload.last_name:
+        user.last_name = payload.last_name
+        changes.append(f"last_name→{payload.last_name}")
+        name_changed = True
+
+    if payload.extension is not None and user.extension != payload.extension:
+        user.extension = payload.extension
+        changes.append(f"extension→{payload.extension or '(none)'}")
+        name_changed = True
+
+    if name_changed:
+        old_name = user.name
+        new_name = combine_names(
+            user.first_name or "",
+            user.middle_name,
+            user.last_name or "",
+            user.extension,
+        )
+        if old_name != new_name:
+            user.name = new_name
+            changes.append(f"name→{new_name}")
 
     if payload.email is not None:
         new_email = payload.email.lower()

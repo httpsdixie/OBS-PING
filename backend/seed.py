@@ -11,7 +11,85 @@ from app.models.user import User, UserRole, UserStatus
 from app.core.security import hash_password
 from app.constants.permissions import default_permissions_for_role
 
+def parse_full_name(name: str):
+    if not name:
+        return "", "", "", ""
+    parts = name.strip().split()
+    if not parts:
+        return "", "", "", ""
+    
+    suffixes = {"jr.", "jr", "sr.", "sr", "iii", "iv", "ii", "i"}
+    extension = ""
+    ext_index = -1
+    for idx, part in enumerate(parts):
+        clean_part = part.lower().strip(",.")
+        if clean_part in suffixes:
+            ext_index = idx
+            break
+    if ext_index != -1:
+        extension = parts.pop(ext_index)
+        
+    if not parts:
+        return "", "", "", extension
+        
+    if len(parts) == 1:
+        return parts[0], "", "", extension
+    elif len(parts) == 2:
+        return parts[0], "", parts[1], extension
+    else:
+        last_name = parts[-1]
+        first_name_parts = []
+        middle_name_parts = []
+        for i, p in enumerate(parts[:-1]):
+            clean_p = p.replace('.', '')
+            if (len(p) <= 2 and clean_p.isalpha()) and i > 0:
+                middle_name_parts.append(p)
+            elif middle_name_parts:
+                middle_name_parts.append(p)
+            else:
+                first_name_parts.append(p)
+        if not middle_name_parts and len(first_name_parts) > 1:
+            middle_name_parts = [first_name_parts.pop()]
+        first_name = " ".join(first_name_parts)
+        middle_name = " ".join(middle_name_parts)
+        return first_name, middle_name, last_name, extension
+
 Base.metadata.create_all(bind=engine)
+
+from sqlalchemy import text
+from sqlalchemy import inspect
+# Run migration check
+inspector = inspect(engine)
+if inspector.has_table("users"):
+    columns = [col["name"] for col in inspector.get_columns("users")]
+    if "first_name" not in columns:
+        try:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN first_name VARCHAR(50)"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN middle_name VARCHAR(50)"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN last_name VARCHAR(50)"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN extension VARCHAR(10)"))
+            
+            # Backfill existing names
+            db_session = SessionLocal()
+            try:
+                users_list = db_session.query(User).all()
+                for u in users_list:
+                    if u.name:
+                        first, middle, last, ext = parse_full_name(u.name)
+                        u.first_name = first
+                        u.middle_name = middle
+                        u.last_name = last
+                        u.extension = ext
+                db_session.commit()
+            except Exception as be:
+                print(f"Backfill error: {be}")
+                db_session.rollback()
+            finally:
+                db_session.close()
+        except Exception as e:
+            print(f"Migration error: {e}")
+
 db = SessionLocal()
 
 # ---------------------------------------------------------------------------
@@ -96,6 +174,7 @@ STAFF = [
 DEFAULT_PASSWORD = "observer2026"
 DOMAIN           = "@observer.evsu.edu.ph"
 
+
 created = 0
 skipped = 0
 updated = 0
@@ -118,8 +197,14 @@ for entry in STAFF:
         updated += 1
         continue
 
+    first, middle, last, ext = parse_full_name(name)
+
     new_user = User(
         name=name,
+        first_name=first,
+        middle_name=middle,
+        last_name=last,
+        extension=ext,
         email=email,
         hashed_password=hash_password(DEFAULT_PASSWORD),
         role=role,

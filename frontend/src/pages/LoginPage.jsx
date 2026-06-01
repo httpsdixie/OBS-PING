@@ -59,6 +59,34 @@ function OtpInput({ value, onChange, disabled }) {
   );
 }
 
+const checkPasswordStrength = (pwd) => {
+  const reqs = {
+    length: pwd.length >= 8,
+    upper: /[A-Z]/.test(pwd),
+    lower: /[a-z]/.test(pwd),
+    number: /[0-9]/.test(pwd),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
+  };
+  const score = Object.values(reqs).filter(Boolean).length;
+  let strength = "Very Weak";
+  let color = "bg-red-500";
+  let textColor = "text-red-500";
+  if (score === 5) {
+    strength = "Strong (Secure)";
+    color = "bg-green-600";
+    textColor = "text-green-600";
+  } else if (score >= 3) {
+    strength = "Good";
+    color = "bg-yellow-500";
+    textColor = "text-yellow-600";
+  } else if (score >= 2) {
+    strength = "Fair";
+    color = "bg-orange-500";
+    textColor = "text-orange-600";
+  }
+  return { reqs, score, strength, color, textColor };
+};
+
 export default function LoginPage() {
   const { setUser } = useAuth();
   const navigate = useNavigate();
@@ -230,7 +258,8 @@ export default function LoginPage() {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 8) return toast.error("Password must be at least 8 characters.");
+    const strength = checkPasswordStrength(newPassword);
+    if (strength.score < 5) return toast.error("New password must meet all security requirements.");
     if (newPassword !== confirmPassword) return toast.error("Passwords do not match.");
     setLoading(true);
     try {
@@ -386,78 +415,122 @@ export default function LoginPage() {
           </form>
         )}
 
-        {mode === "forgot" && step === "reset_password" && (
-          <form onSubmit={handleResetPassword} className="space-y-4">
-            <p className="text-xs text-gray-500 text-center">Code verified. Enter your new password below.</p>
-            <div className="relative">
-              <label className="label">New password</label>
-              <div className="relative mt-1">
-                <input
-                  className="input pr-10"
-                  type={showNewPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  minLength={8}
-                  required
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-maroon-700"
-                >
-                  {showNewPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.815 7.815 3 3m-3-3-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                    </svg>
-                  )}
-                </button>
+        {mode === "forgot" && step === "reset_password" && (() => {
+          const strength = checkPasswordStrength(newPassword);
+          return (
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <p className="text-xs text-gray-500 text-center">Code verified. Enter your new password below.</p>
+              <div className="relative">
+                <label className="label">New password</label>
+                <div className="relative mt-1">
+                  <input
+                    className="input pr-10"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-maroon-700"
+                  >
+                    {showNewPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.815 7.815 3 3m-3-3-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {newPassword && (
+                  <div className="mt-2 space-y-1.5 p-3 bg-gray-50 rounded-xl border border-gray-100 transition-all duration-300">
+                    <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                      <div className={`h-full ${strength.color} transition-all duration-300`} style={{ width: `${(strength.score / 5) * 100}%` }}></div>
+                    </div>
+                    <div className="flex justify-between items-center text-xs font-semibold">
+                      <span className="text-gray-600">Password Strength:</span>
+                      <span className={strength.textColor}>{strength.strength}</span>
+                    </div>
+                    <ul className="text-[11px] grid grid-cols-2 gap-x-2 gap-y-1 text-gray-500 pt-1 border-t border-gray-200/50 mt-1">
+                      <li className="flex items-center gap-1">
+                        <span className={strength.reqs.length ? "text-green-600 font-bold" : "text-gray-300"}>
+                          {strength.reqs.length ? "✓" : "○"}
+                        </span>
+                        <span className={strength.reqs.length ? "text-gray-700 font-medium" : ""}>Min 8 characters</span>
+                      </li>
+                      <li className="flex items-center gap-1">
+                        <span className={strength.reqs.upper ? "text-green-600 font-bold" : "text-gray-300"}>
+                          {strength.reqs.upper ? "✓" : "○"}
+                        </span>
+                        <span className={strength.reqs.upper ? "text-gray-700 font-medium" : ""}>Uppercase (A-Z)</span>
+                      </li>
+                      <li className="flex items-center gap-1">
+                        <span className={strength.reqs.lower ? "text-green-600 font-bold" : "text-gray-300"}>
+                          {strength.reqs.lower ? "✓" : "○"}
+                        </span>
+                        <span className={strength.reqs.lower ? "text-gray-700 font-medium" : ""}>Lowercase (a-z)</span>
+                      </li>
+                      <li className="flex items-center gap-1">
+                        <span className={strength.reqs.number ? "text-green-600 font-bold" : "text-gray-300"}>
+                          {strength.reqs.number ? "✓" : "○"}
+                        </span>
+                        <span className={strength.reqs.number ? "text-gray-700 font-medium" : ""}>Number (0-9)</span>
+                      </li>
+                      <li className="flex items-center gap-1 col-span-2">
+                        <span className={strength.reqs.special ? "text-green-600 font-bold" : "text-gray-300"}>
+                          {strength.reqs.special ? "✓" : "○"}
+                        </span>
+                        <span className={strength.reqs.special ? "text-gray-700 font-medium" : ""}>Special char (!@#$...)</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </div>
-            </div>
-            <div className="relative">
-              <label className="label">Confirm password</label>
-              <div className="relative mt-1">
-                <input
-                  className="input pr-10"
-                  type={showNewPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  minLength={8}
-                  required
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-maroon-700"
-                >
-                  {showNewPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.815 7.815 3 3m-3-3-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                    </svg>
-                  )}
-                </button>
+              <div className="relative">
+                <label className="label">Confirm password</label>
+                <div className="relative mt-1">
+                  <input
+                    className="input pr-10"
+                    type={showNewPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-maroon-700"
+                  >
+                    {showNewPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.815 7.815 3 3m-3-3-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-            <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? "Updating…" : "Reset password"}
-            </button>
-            <button type="button" className="text-sm text-gray-500 hover:underline w-full text-center"
-              onClick={() => setStep("otp")} disabled={loading}>
-              Back to code
-            </button>
-          </form>
-        )}
+              <button type="submit" className="btn-primary w-full" disabled={loading}>
+                {loading ? "Updating…" : "Reset password"}
+              </button>
+              <button type="button" className="text-sm text-gray-500 hover:underline w-full text-center"
+                onClick={() => setStep("otp")} disabled={loading}>
+                Back to code
+              </button>
+            </form>
+          );
+        })()}
       </div>
     </div>
   );

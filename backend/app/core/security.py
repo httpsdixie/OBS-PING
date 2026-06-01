@@ -76,3 +76,18 @@ def decode_reset_token(token: str) -> Optional[int]:
     except JWTError:
         return None
 
+
+def validate_strong_password(v: str) -> str:
+    if len(v) < 8:
+        raise ValueError("Password must be at least 8 characters long.")
+    if not any(c.isupper() for c in v):
+        raise ValueError("Password must contain at least one uppercase letter (A-Z).")
+    if not any(c.islower() for c in v):
+        raise ValueError("Password must contain at least one lowercase letter (a-z).")
+    if not any(c.isdigit() for c in v):
+        raise ValueError("Password must contain at least one number (0-9).")
+    if not any(c in "!@#$%^&*(),.?\":{}|<>" for c in v):
+        raise ValueError("Password must contain at least one special character (e.g. !@#$...).")
+    return v
+
+

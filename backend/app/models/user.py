@@ -41,6 +41,10 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(120), nullable=False)
+    first_name = Column(String(50), nullable=True)
+    middle_name = Column(String(50), nullable=True)
+    last_name = Column(String(50), nullable=True)
+    extension = Column(String(10), nullable=True)
     email = Column(String(120), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     role = Column(SAEnum(UserRole), default=UserRole.staff, nullable=False)
