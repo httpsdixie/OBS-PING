@@ -3,6 +3,7 @@
  * pagination, and task creation for admins (UC-01).
  */
 import { useState } from "react";
+import { format } from "date-fns";
 import toast from "react-hot-toast";
 import { useTasks } from "../hooks/useTasks";
 import { useAuth } from "../context/AuthContext";
@@ -57,6 +58,15 @@ export default function TasksPage() {
   const [selected,   setSelected]   = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
+  const [initialTaskFormValues, setInitialTaskFormValues] = useState({});
+
+  const handleDayClick = (day) => {
+    if (canWrite) {
+      const selectedDateIso = format(day, "yyyy-MM-dd'T'17:00:00");
+      setInitialTaskFormValues({ deadline: selectedDateIso });
+      setShowCreate(true);
+    }
+  };
 
   // Reset to page 1 when filters change
   const handleFilterChange = (setter) => (e) => {
@@ -200,7 +210,7 @@ export default function TasksPage() {
             </>
           )}
           {canWrite && !archiveMode && (
-            <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-1">
+            <button onClick={() => { setInitialTaskFormValues({}); setShowCreate(true); }} className="btn-primary flex items-center gap-1">
               <PlusIcon className="w-4 h-4" /> {simpleMode ? "New task" : "New Task"}
             </button>
           )}
@@ -290,7 +300,11 @@ export default function TasksPage() {
         </>
       ) : (
         // Calendar view — Google Calendar style monthly grid
-        <CalendarView tasks={tasks} onTaskClick={setSelected} />
+        <CalendarView
+          tasks={tasks}
+          onTaskClick={setSelected}
+          onDaySelect={canWrite ? handleDayClick : undefined}
+        />
       )}
 
       {selected && (
@@ -306,7 +320,12 @@ export default function TasksPage() {
       )}
       {showCreate && (
         <Modal title={simpleMode ? "Assign new work" : "New Task"} onClose={() => setShowCreate(false)}>
-          <TaskForm onSubmit={handleCreate} onCancel={() => setShowCreate(false)} loading={createBusy} />
+          <TaskForm
+            initial={initialTaskFormValues}
+            onSubmit={handleCreate}
+            onCancel={() => setShowCreate(false)}
+            loading={createBusy}
+          />
         </Modal>
       )}
     </div>

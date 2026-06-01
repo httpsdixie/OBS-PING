@@ -109,20 +109,20 @@ export default function CalendarView({
           return (
             <div
               key={key}
-              role={selectMode ? "button" : undefined}
-              tabIndex={selectMode && !disabled ? 0 : undefined}
+              role={selectMode || onDaySelect ? "button" : undefined}
+              tabIndex={(selectMode || onDaySelect) && !disabled ? 0 : undefined}
               onClick={() => {
-                if (selectMode && !disabled && onDaySelect) onDaySelect(day);
+                if ((selectMode || onDaySelect) && !disabled && onDaySelect) onDaySelect(day);
               }}
               onKeyDown={(e) => {
-                if (selectMode && !disabled && onDaySelect && (e.key === "Enter" || e.key === " ")) {
+                if ((selectMode || onDaySelect) && !disabled && onDaySelect && (e.key === "Enter" || e.key === " ")) {
                   e.preventDefault();
                   onDaySelect(day);
                 }
               }}
               className={`${cellMinH} p-1.5 border-r border-b border-gray-100 ${
                 !inMonth ? "bg-gray-50" : "bg-white"
-              } ${disabled ? "opacity-40 cursor-not-allowed" : selectMode ? "cursor-pointer hover:bg-maroon-50/50" : ""} ${
+              } ${disabled ? "opacity-40 cursor-not-allowed" : (selectMode || onDaySelect) ? "cursor-pointer hover:bg-maroon-50/50" : ""} ${
                 picked ? "ring-2 ring-inset ring-maroon-600 bg-maroon-50/30" : ""
               } ${isLast || (i + 1) % 7 === 0 ? "border-r-0" : ""} ${
                 isLastRow ? "border-b-0" : ""
