@@ -31,6 +31,25 @@ def _invalidate_active(db: Session, user_id: int, purpose: OtpPurpose) -> None:
 
 def create_and_send_otp(db: Session, user: User, purpose: OtpPurpose) -> str:
     """Returns the plain OTP (for debug expose only)."""
+    # 1-minute cooldown rate-limit per user + purpose (resend protection)
+    last_otp = (
+        db.query(OtpCode)
+        .filter(OtpCode.user_id == user.id, OtpCode.purpose == purpose)
+        .order_by(OtpCode.created_at.desc())
+        .first()
+    )
+    if last_otp:
+        created_at = last_otp.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        elapsed = (datetime.now(timezone.utc) - created_at).total_seconds()
+        if elapsed < 60:
+            remaining = int(60 - elapsed)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Please wait {remaining} seconds before requesting a new code.",
+            )
+
     _invalidate_active(db, user.id, purpose)
     code = _generate_code()
     record = OtpCode(

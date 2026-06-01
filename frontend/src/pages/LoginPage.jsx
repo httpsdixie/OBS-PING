@@ -74,6 +74,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
 
   const resetFlow = () => {
     setStep("credentials");
@@ -85,6 +93,28 @@ export default function LoginPage() {
     setConfirmPassword("");
     setShowPassword(false);
     setShowNewPassword(false);
+  };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      if (mode === "login") {
+        const data = await requestLoginOtp(email, password);
+        setChallengeToken(data.challenge_token);
+        setDevOtp(data.dev_otp ?? null);
+        toast.success("A new verification code has been sent.");
+      } else {
+        const data = await requestForgotPasswordOtp(email);
+        setChallengeToken(data.challenge_token);
+        setDevOtp(data.dev_otp ?? null);
+        toast.success("A new verification code has been sent.");
+      }
+      setResendCooldown(60);
+    } catch (err) {
+      toast.error(apiError(err, "Failed to resend code."));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const switchMode = (next) => {
@@ -107,6 +137,7 @@ export default function LoginPage() {
       setChallengeToken(data.challenge_token);
       setDevOtp(data.dev_otp ?? null);
       setStep("otp");
+      setResendCooldown(60);
       toast.success(data.message);
     } catch (err) {
       toast.error(apiError(err, "Incorrect email or password."));
@@ -145,6 +176,7 @@ export default function LoginPage() {
       setChallengeToken(data.challenge_token);
       setDevOtp(data.dev_otp ?? null);
       setStep("otp");
+      setResendCooldown(60);
       toast.success(data.message);
     } catch (err) {
       toast.error(apiError(err, "Could not send code."));
@@ -263,10 +295,20 @@ export default function LoginPage() {
             <button type="submit" className="btn-primary w-full" disabled={loading || otp.length !== OTP_LEN}>
               {loading ? "Verifying…" : "Sign in"}
             </button>
-            <button type="button" className="text-sm text-gray-500 hover:underline w-full text-center"
-              onClick={resetFlow} disabled={loading}>
-              Back
-            </button>
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <button
+                type="button"
+                className="text-xs font-semibold text-maroon-700 hover:underline disabled:text-gray-400 disabled:no-underline"
+                disabled={loading || resendCooldown > 0}
+                onClick={handleResendOtp}
+              >
+                {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
+              </button>
+              <button type="button" className="text-sm text-gray-500 hover:underline w-full text-center"
+                onClick={resetFlow} disabled={loading}>
+                Back
+              </button>
+            </div>
           </form>
         )}
 
@@ -300,10 +342,20 @@ export default function LoginPage() {
             <button type="submit" className="btn-primary w-full" disabled={loading || otp.length !== OTP_LEN}>
               {loading ? "Verifying…" : "Verify code"}
             </button>
-            <button type="button" className="text-sm text-gray-500 hover:underline w-full text-center"
-              onClick={resetFlow} disabled={loading}>
-              Back
-            </button>
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <button
+                type="button"
+                className="text-xs font-semibold text-maroon-700 hover:underline disabled:text-gray-400 disabled:no-underline"
+                disabled={loading || resendCooldown > 0}
+                onClick={handleResendOtp}
+              >
+                {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
+              </button>
+              <button type="button" className="text-sm text-gray-500 hover:underline w-full text-center"
+                onClick={resetFlow} disabled={loading}>
+                Back
+              </button>
+            </div>
           </form>
         )}
 
