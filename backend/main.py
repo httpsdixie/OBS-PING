@@ -99,6 +99,20 @@ if inspector.has_table("users"):
         except Exception as e:
             print(f"Migration error: {e}")
 
+# One-time startup delete of a trial account (will be removed in the next commit)
+try:
+    db_session = SessionLocal()
+    from app.models.user import User
+    morpos_user = db_session.query(User).filter(User.email == "josephjaymel.morpos@evsu.edu.ph").first()
+    if morpos_user:
+        db_session.delete(morpos_user)
+        db_session.commit()
+        print("Successfully deleted trial account 'josephjaymel.morpos@evsu.edu.ph'!")
+    db_session.close()
+except Exception as pe:
+    print(f"Startup trial user delete error: {pe}")
+
+
 
 
 @asynccontextmanager
