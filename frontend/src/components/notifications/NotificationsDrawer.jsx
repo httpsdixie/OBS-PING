@@ -24,7 +24,7 @@ const TYPE_STYLES = {
   status_update:     "bg-purple-50 border-purple-200",
 };
 
-export default function NotificationsDrawer({ onClose }) {
+export default function NotificationsDrawer({ onClose, onTaskSelect }) {
   const { notifications, loading, handleMarkRead, handleMarkAllRead } = useNotifications();
   const unread = notifications.filter((n) => !n.is_read).length;
 
@@ -58,34 +58,57 @@ export default function NotificationsDrawer({ onClose }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {notifications.map((n) => (
-            <div
-              key={n.id}
-              className={`rounded-lg border p-3 ${TYPE_STYLES[n.type] ?? "bg-white border-gray-100"} ${
-                !n.is_read ? "ring-1 ring-maroon-300" : "opacity-60"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
-                    {TYPE_LABELS[n.type] ?? n.type}
-                  </p>
-                  <p className="text-sm text-gray-800">{n.message}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {format(new Date(n.sent_at), "MMM d · h:mm a")}
-                  </p>
+          {notifications.map((n) => {
+            const hasTask = !!n.task_id;
+            const handleClick = async () => {
+              if (!n.is_read) {
+                await onMarkRead(n.id);
+              }
+              if (hasTask && onTaskSelect) {
+                onTaskSelect(n.task_id);
+                onClose();
+              }
+            };
+
+            return (
+              <div
+                key={n.id}
+                onClick={handleClick}
+                style={{ cursor: hasTask ? "pointer" : "default" }}
+                className={`rounded-lg border p-3 transition-all duration-200 ${
+                  TYPE_STYLES[n.type] ?? "bg-white border-gray-100"
+                } ${
+                  !n.is_read
+                    ? "ring-1 ring-maroon-300 hover:shadow-md hover:scale-[1.01]"
+                    : "opacity-60 hover:opacity-100"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
+                      {TYPE_LABELS[n.type] ?? n.type}
+                    </p>
+                    <p className="text-sm text-gray-800">{n.message}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {format(new Date(n.sent_at), "MMM d · h:mm a")}
+                    </p>
+                  </div>
+                  {!n.is_read && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMarkRead(n.id);
+                      }}
+                      className="text-xs text-maroon-700 hover:underline hover:scale-110 transition-transform flex-shrink-0 min-h-[44px] flex items-center justify-center w-6"
+                      title="Mark as read"
+                    >
+                      ✓
+                    </button>
+                  )}
                 </div>
-                {!n.is_read && (
-                  <button
-                    onClick={() => onMarkRead(n.id)}
-                    className="text-xs text-maroon-700 hover:underline flex-shrink-0 min-h-[44px] flex items-center"
-                  >
-                    ✓
-                  </button>
-                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </Drawer>

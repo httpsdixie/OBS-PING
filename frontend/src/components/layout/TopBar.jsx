@@ -3,12 +3,39 @@
  */
 import { useState } from "react";
 import { Bars3Icon, BellIcon } from "@heroicons/react/24/outline";
+import toast from "react-hot-toast";
 import { useNotifications } from "../../hooks/useNotifications";
 import NotificationsDrawer from "../notifications/NotificationsDrawer";
+import Modal from "../ui/Modal";
+import TaskDetail from "../tasks/TaskDetail";
+import Spinner from "../ui/Spinner";
+import { getTask } from "../../services/taskService";
 
 export default function TopBar({ onMenuClick }) {
   const { unreadCount } = useNotifications();
   const [showNotifs, setShowNotifs] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [loadingTask, setLoadingTask]   = useState(false);
+  const [taskUpdated, setTaskUpdated]   = useState(false);
+
+  const handleTaskSelect = async (taskId) => {
+    setLoadingTask(true);
+    try {
+      const taskData = await getTask(taskId);
+      setSelectedTask(taskData);
+    } catch (e) {
+      toast.error("Failed to load task details.");
+    } finally {
+      setLoadingTask(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setSelectedTask(null);
+    if (taskUpdated) {
+      window.location.reload();
+    }
+  };
 
   return (
     <>
@@ -41,7 +68,38 @@ export default function TopBar({ onMenuClick }) {
         </div>
       </header>
 
-      {showNotifs && <NotificationsDrawer onClose={() => setShowNotifs(false)} />}
+      {showNotifs && (
+        <NotificationsDrawer
+          onClose={() => setShowNotifs(false)}
+          onTaskSelect={handleTaskSelect}
+        />
+      )}
+
+      {loadingTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white p-6 rounded-xl shadow-xl flex flex-col items-center gap-3">
+            <Spinner />
+            <p className="text-sm text-gray-500 font-medium animate-pulse">Loading task details...</p>
+          </div>
+        </div>
+      )}
+
+      {selectedTask && (
+        <Modal title={selectedTask.title} onClose={handleModalClose}>
+          <TaskDetail
+            task={selectedTask}
+            onUpdated={(updated) => {
+              setSelectedTask(updated);
+              setTaskUpdated(true);
+            }}
+            onDeleted={() => {
+              handleModalClose();
+              window.location.reload();
+            }}
+            onClose={handleModalClose}
+          />
+        </Modal>
+      )}
     </>
   );
 }

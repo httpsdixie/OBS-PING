@@ -29,3 +29,6 @@ export const unarchiveTask = (id) =>
 
 export const deleteTask = (id) =>
   api.delete(`/tasks/${id}`).then((r) => r.data);
+
+export const getTask = (id) =>
+  api.get(`/tasks/${id}`).then((r) => r.data);
