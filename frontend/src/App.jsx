@@ -2,7 +2,7 @@
  * App — root router. All routes defined here.
  */
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+import { Toaster, ToastBar, toast } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import { SimpleModeProvider } from "./context/SimpleModeContext";
 
@@ -24,7 +24,7 @@ export default function App() {
         <Toaster
           position="top-right"
           toastOptions={{
-            duration: 3000,
+            duration: 5000,
             style: {
               fontSize: "14px",
               borderRadius: "10px",
@@ -40,7 +40,47 @@ export default function App() {
               style: { background: "#fff", color: "#1a1a1a", borderLeft: "4px solid #dc2626" },
             },
           }}
-        />
+        >
+          {(t) => (
+            <ToastBar toast={t}>
+              {({ icon, message }) => (
+                <>
+                  {icon}
+                  {message}
+                  {t.type !== "loading" && (
+                    <button
+                      onClick={() => toast.dismiss(t.id)}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "2px",
+                        marginLeft: "8px",
+                        fontSize: "14px",
+                        lineHeight: "1",
+                        color: "#94a3b8",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "color 0.2s, transform 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = "#7b1c1c";
+                        e.currentTarget.style.transform = "scale(1.2)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = "#94a3b8";
+                        e.currentTarget.style.transform = "scale(1)";
+                      }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </>
+              )}
+            </ToastBar>
+          )}
+        </Toaster>
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
