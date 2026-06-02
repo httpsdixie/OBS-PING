@@ -109,7 +109,7 @@ STAFF = [
 
     # ── Section Editors ──────────────────────────────────────────────────────
     ("Rheina Mae K. Capucao",       "news.editor",      UserRole.admin,       "News Editor"),
-    ("Liza Mae T. Boloy",           "literary.editor",  UserRole.admin,       "Literary Editor"),
+    ("Liza Mae T. Boloy",           "literary.editor",  UserRole.admin,       "Literary Editor", "lizamae.boloy@evsu.edu.ph"),
 
     # ── Writers ──────────────────────────────────────────────────────────────
     ("Maria Ellanie Jane S. Bayona","writer.bayona",    UserRole.staff,       "Writer"),
@@ -131,7 +131,7 @@ STAFF = [
     ("Laika V. Lato",               "photo.lato",       UserRole.staff,       "Photojournalist", "laika.lato@evsu.edu.ph"),
 
     # ── Video Editors ────────────────────────────────────────────────────────
-    ("Grace Ruelo",                 "video.head",       UserRole.admin,       "Head Video Editor"),
+    ("Grace Ruelo",                 "video.head",       UserRole.admin,       "Head Video Editor", "grace.ruelo@evsu.edu.ph"),
     ("Jake Cascara",                "video.cascara",    UserRole.staff,       "Video Editor"),
     ("Karen Diano",                 "video.diano",      UserRole.staff,       "Video Editor"),
 
@@ -143,7 +143,7 @@ STAFF = [
     ("Jessica Castil",              "corr.castil",      UserRole.staff,       "Correspondent"),
     ("James Ruel Lopez",            "corr.lopez",       UserRole.staff,       "Correspondent"),
     ("Ma. Angeline Jumao-as",       "corr.jumaoas",     UserRole.staff,       "Correspondent"),
-    ("Ricogie B. Malinao",          "corr.malinao",     UserRole.staff,       "Correspondent"),
+    ("Ricogie B. Malinao",          "corr.malinao",     UserRole.staff,       "Correspondent", "ricogie.malinao@evsu.edu.ph"),
     ("Ashbie Merino",               "corr.merino",      UserRole.staff,       "Correspondent", "ashbie.merino@evsu.edu.ph"),
     ("Manny Jan A. Surima",         "corr.surima",      UserRole.staff,       "Correspondent", "mannyjan.surima@evsu.edu.ph"),
 
@@ -158,7 +158,7 @@ STAFF = [
     ("April Grace Panta",           "illus.head",       UserRole.admin,       "Head Illustrator"),
     ("Jhoram Pobadora",             "illus.pobadora",   UserRole.staff,       "Illustrator"),
     ("Geraldyn Boholst",            "illus.boholst",    UserRole.staff,       "Illustrator"),
-    ("Bryl Psalm Y. Laude",         "illus.laude",      UserRole.staff,       "Illustrator"),
+    ("Bryl Psalm Y. Laude",         "illus.laude",      UserRole.staff,       "Illustrator", "brylpsalm.laude@evsu.edu.ph"),
 
     # ── Cartoonists ──────────────────────────────────────────────────────────
     ("Rj Q. Abayata",               "cartoon.head",     UserRole.admin,       "Head Cartoonist"),
